@@ -1,3 +1,165 @@
 # SentinelHybrid
 
-Initial repository setup.
+> **Jetson Orin Nano 기반 하이브리드 실시간 위험 감지 대응 시스템**  
+> **On-device Safety + Cloud RAG Intelligence**
+
+SentinelHybrid는 현장에서 즉시 반응하는 **온디바이스 안전 대응**과, 클라우드에서 지식기반으로 정교하게 대응하는 **RAG 인텔리전스**를 결합한 안전 시스템입니다.
+
+카메라 입력을 Jetson Orin Nano에서 실시간 분석하고, 위험 상황일 때만 서버와 연동해 대응 매뉴얼 생성, 로그 적재, 슬랙 알림, 음성 안내까지 자동으로 수행합니다.
+
+---
+
+## 1. 프로젝트 목표
+
+기존 영상 감지 시스템은 `감지`에서 끝나는 경우가 많습니다.  
+SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합니다.
+
+- 현장 경고: LED 점멸, 사이렌, 안내 음성
+- 서버 대응: 상황 해석, RAG 기반 매뉴얼 생성
+- 운영 연계: 로그 저장, Slack 전파, 추후 분석
+
+즉, "위험을 찾는 시스템"이 아니라 "**위험에 대응하는 시스템**"을 목표로 합니다.
+
+---
+
+## 2. 전체 아키텍처
+
+<p align="center">
+  <img src="./pipeline.png" alt="SentinelHybrid Pipeline" width="980" />
+</p>
+
+> Jetson 온디바이스 추론과 FastAPI + MCP + RAG 클라우드 대응 체계를 하나의 파이프라인으로 통합합니다.
+
+---
+
+## 3. 핵심 동작 파이프라인
+
+1. Jetson에 연결된 카메라에서 프레임 입력을 받습니다.
+2. 일정 프레임 간격으로 온디바이스 VLM 추론을 수행합니다.
+3. 위험 상황으로 판단되면 Jetson이 즉시 로컬 대응을 시작합니다.
+4. 동시에 상황 설명 텍스트를 FastAPI 서버로 전송합니다.
+5. 서버는 Gemini + MCP + RAG를 통해 상황별 대응 매뉴얼을 생성합니다.
+6. 생성된 매뉴얼은 Jetson으로 다시 전달됩니다.
+7. Jetson은 스피커를 통해 대응 문장을 음성으로 안내합니다.
+8. 서버는 동일 이벤트를 Supabase에 기록하고 Slack으로 전파합니다.
+
+---
+
+## 4. 왜 하이브리드인가?
+
+### On-device (Jetson) 역할
+- 네트워크 상태와 무관하게 즉시 위험 감지/경고
+- 지연이 치명적인 순간에 빠른 1차 대응
+
+### Cloud (FastAPI + RAG) 역할
+- 상황 맥락 기반 판단 고도화
+- 매뉴얼/정책/히스토리 기반 대응 지시 생성
+- 운영 시스템(Slack, 로그 저장소)과 연동
+
+### 결론
+- **속도는 Edge**, **지식과 확장성은 Cloud**에서 담당
+- 현장성과 운영성을 동시에 확보
+
+---
+
+## 5. 기술 스택
+
+| 영역 | 기술 |
+|---|---|
+| Edge Device | Jetson Orin Nano |
+| Vision Inference | On-device VLM (Gemma 3 4B) |
+| Backend API | FastAPI |
+| Language | Python |
+| LLM Reasoning | Gemini API |
+| Orchestration | LangChain |
+| Context Protocol | MCP (Model Context Protocol) |
+| RAG | Chroma / Pinecone (MCP 연동) |
+| Logging | Supabase (MCP 연동) |
+| Alerting | Slack MCP |
+| Local Response | LED, Siren, TTS Speaker |
+
+---
+
+## 6. MCP 기반 확장 포인트
+
+SentinelHybrid는 MCP를 통해 외부 도구를 "호출 가능한 컨텍스트"로 표준화해 연결합니다.
+
+- **RAG MCP**: 상황 문맥에 맞는 대응 절차 검색/요약
+- **Supabase MCP**: 사건 로그 저장, 이력 조회, 사후 분석 데이터 축적
+- **Slack MCP**: 관리자/운영 채널에 실시간 전파 및 협업 대응
+
+이 구조를 사용하면 도구를 교체하거나 추가할 때도 핵심 파이프라인 변경을 최소화할 수 있습니다.
+
+---
+
+## 프로젝트 구조
+
+아래는 현재 설계 기준의 권장 디렉토리 구조입니다.
+
+```text
+SentinelHybrid/
+├── README.md
+├── pipeline.png
+├── src/
+│   ├── config/                 # YAML/ENV 설정, 모델/임계치/장치 파라미터
+│   ├── edge/                   # Jetson 추론 루프, 카메라 입력, LED/사이렌/TTS 제어
+│   ├── api/                    # FastAPI 엔드포인트, 이벤트 수신/응답
+│   ├── orchestrator/           # LangChain + MCP 체인 오케스트레이션
+│   ├── rag/                    # 임베딩, 검색, 매뉴얼 생성 로직
+│   ├── integrations/           # Slack/Supabase/Pinecone/Chroma 어댑터
+│   └── utils/                  # 공통 유틸리티
+├── scripts/                    # 실행/배포/테스트 스크립트
+├── tests/                      # 단위/통합 테스트
+└── docs/                       # 운영 가이드, 장애 대응 문서
+```
+
+---
+
+## 프로젝트 실행 및 테스트
+
+```bash
+# 1) 가상환경/패키지 설치
+uv sync
+
+# 2) Edge 파이프라인 실행 (Jetson)
+python -m src.edge.main
+
+# 3) FastAPI 서버 실행
+uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+# 4) 테스트 실행
+pytest -q
+```
+
+> 현재 저장소는 초기 구축 단계입니다. 실제 실행 스크립트/엔트리포인트는 구현 상태에 맞춰 업데이트됩니다.
+
+---
+
+## WBS Gantt Chart (Week 5)
+
+```mermaid
+gantt
+    title SentinelHybrid - WBS (Week 5)
+    dateFormat  YYYY-MM-DD
+    axisFormat  %m/%d
+
+    section 환경 구성
+    요구사항 정리 및 아키텍처 확정               :done,   a1, 2026-02-10, 1d
+    Jetson 장치 연결 점검 (카메라/LED/스피커)    :active, a2, after a1, 2d
+    API/MCP 연동 환경 세팅                        :active, a3, after a2, 2d
+
+    section Edge Pipeline
+    프레임 샘플링 + 온디바이스 추론 루프 구현      :active, b1, 2026-02-12, 3d
+    위험 임계치/이벤트 트리거 튜닝                 :active, b2, after b1, 2d
+    로컬 경고 액션(LED/사이렌/TTS) 통합            :active, b3, after b2, 2d
+
+    section Cloud Intelligence
+    FastAPI 이벤트 수신/응답 API 고도화            :active, c1, 2026-02-14, 2d
+    Gemini + LangChain + MCP 체인 구성             :active, c2, after c1, 3d
+    RAG 검색 및 매뉴얼 생성 품질 개선              :active, c3, after c2, 2d
+
+    section Ops Integration
+    Supabase 로그 스키마/적재                      :active, d1, 2026-02-16, 2d
+    Slack 알림 템플릿/심각도 정책                  :active, d2, after d1, 1d
+    End-to-End 통합 테스트                          :active, d3, after d2, 2d
+```
