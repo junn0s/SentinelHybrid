@@ -94,7 +94,7 @@ SentinelHybrid는 MCP를 통해 외부 도구를 "호출 가능한 컨텍스트"
 
 ## 프로젝트 구조
 
-아래는 현재 설계 기준의 권장 디렉토리 구조입니다.
+아래는 현재 프로젝트의 디렉토리 구조입니다.
 
 ```text
 SentinelHybrid/
@@ -131,35 +131,39 @@ uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 pytest -q
 ```
 
-> 현재 저장소는 초기 구축 단계입니다. 실제 실행 스크립트/엔트리포인트는 구현 상태에 맞춰 업데이트됩니다.
 
 ---
 
-## WBS Gantt Chart (Week 5)
+## WBS Gantt Chart (5 Weeks)
 
 ```mermaid
 gantt
-    title SentinelHybrid - WBS (Week 5)
+    title SentinelHybrid - WBS (5 Weeks from 2026-02-14)
     dateFormat  YYYY-MM-DD
     axisFormat  %m/%d
 
     section 환경 구성
-    요구사항 정리 및 아키텍처 확정               :done,   a1, 2026-02-10, 1d
-    Jetson 장치 연결 점검 (카메라/LED/스피커)    :active, a2, after a1, 2d
-    API/MCP 연동 환경 세팅                        :active, a3, after a2, 2d
+    요구사항 확정 및 범위 정의                     :done,   a1, 2026-02-14, 2d
+    Jetson 장치 연결 점검 (카메라/LED/스피커)     :active, a2, after a1, 3d
+    API/MCP 연동 환경 세팅                         :active, a3, after a2, 2d
 
     section Edge Pipeline
-    프레임 샘플링 + 온디바이스 추론 루프 구현      :active, b1, 2026-02-12, 3d
+    프레임 샘플링 + 온디바이스 추론 루프 구현      :active, b1, after a3, 3d
     위험 임계치/이벤트 트리거 튜닝                 :active, b2, after b1, 2d
     로컬 경고 액션(LED/사이렌/TTS) 통합            :active, b3, after b2, 2d
 
     section Cloud Intelligence
-    FastAPI 이벤트 수신/응답 API 고도화            :active, c1, 2026-02-14, 2d
+    FastAPI 이벤트 수신/응답 API 고도화            :active, c1, after b3, 3d
     Gemini + LangChain + MCP 체인 구성             :active, c2, after c1, 3d
     RAG 검색 및 매뉴얼 생성 품질 개선              :active, c3, after c2, 2d
 
     section Ops Integration
-    Supabase 로그 스키마/적재                      :active, d1, 2026-02-16, 2d
-    Slack 알림 템플릿/심각도 정책                  :active, d2, after d1, 1d
-    End-to-End 통합 테스트                          :active, d3, after d2, 2d
+    Supabase 로그 스키마/적재                       :active, d1, after c3, 3d
+    Slack 알림 템플릿/심각도 정책                   :active, d2, after d1, 2d
+    End-to-End 통합 테스트                           :active, d3, after d2, 2d
+
+    section Validation & Release
+    현장 시나리오 리허설 및 회귀 테스트             :active, e1, after d3, 3d
+    성능/지연 측정 및 임계치 재조정                 :active, e2, after e1, 2d
+    배포 점검 및 결과 문서화                         :active, e3, after e2, 3d
 ```
