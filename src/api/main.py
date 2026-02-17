@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.api.config import ApiConfig
 from src.api.models import DangerEvent, DangerEventAck, DangerResponse
@@ -16,6 +18,7 @@ app = FastAPI(title="SentinelHybrid Danger Event API", version="0.2.0")
 
 EVENT_LOG_PATH = Path(CONFIG.event_log_path)
 RESPONSE_LOG_PATH = Path(CONFIG.response_log_path)
+ADMIN_DIR = Path(__file__).resolve().parent / "static" / "admin"
 
 RECENT_EVENTS: list[dict[str, Any]] = []
 RECENT_RESPONSES: list[dict[str, Any]] = []
@@ -28,6 +31,9 @@ PIPELINE = DangerProcessingPipeline(
     mcp_timeout_sec=CONFIG.rag_mcp_timeout_sec,
 )
 
+if ADMIN_DIR.exists():
+    app.mount("/admin/static", StaticFiles(directory=str(ADMIN_DIR)), name="admin-static")
+
 
 def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -39,6 +45,19 @@ def _push_recent(items: list[dict[str, Any]], payload: dict[str, Any]) -> None:
     items.insert(0, payload)
     if len(items) > CONFIG.recents_max:
         items.pop()
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    return RedirectResponse(url="/admin")
+
+
+@app.get("/admin", include_in_schema=False)
+def admin_page() -> FileResponse:
+    page = ADMIN_DIR / "index.html"
+    if not page.exists():
+        raise HTTPException(status_code=404, detail="Admin UI is not available.")
+    return FileResponse(page)
 
 
 @app.get("/health")

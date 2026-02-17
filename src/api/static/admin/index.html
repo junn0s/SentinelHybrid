@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SentinelHybrid Control Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/admin/static/styles.css" />
+  </head>
+  <body>
+    <div class="bg-layer"></div>
+    <div class="grain-layer"></div>
+
+    <main class="app-shell">
+      <header class="topbar card reveal">
+        <div>
+          <p class="eyebrow">SentinelHybrid</p>
+          <h1>Safety Control Center</h1>
+          <p class="subtitle">Edge + Cloud 위험 대응 관리자 대시보드</p>
+        </div>
+        <div class="topbar-meta">
+          <div class="badge" id="server-status-badge">
+            <span class="dot" id="server-status-dot"></span>
+            <span id="server-status-text">Connecting...</span>
+          </div>
+          <div class="badge">
+            <span>Model</span>
+            <strong id="model-text">-</strong>
+          </div>
+          <button id="refresh-button" class="btn">지금 새로고침</button>
+        </div>
+      </header>
+
+      <section class="metric-grid reveal">
+        <article class="card metric" style="--metric-accent: var(--cyan)">
+          <p class="metric-label">총 이벤트</p>
+          <p class="metric-value" id="metric-events">0</p>
+        </article>
+        <article class="card metric" style="--metric-accent: var(--blue)">
+          <p class="metric-label">응답 완료</p>
+          <p class="metric-value" id="metric-responses">0</p>
+        </article>
+        <article class="card metric" style="--metric-accent: var(--amber)">
+          <p class="metric-label">MCP 사용 비율</p>
+          <p class="metric-value" id="metric-mcp-rate">0%</p>
+        </article>
+        <article class="card metric" style="--metric-accent: var(--danger)">
+          <p class="metric-label">평균 신뢰도</p>
+          <p class="metric-value" id="metric-confidence">0.00</p>
+        </article>
+      </section>
+
+      <section class="content-grid reveal">
+        <article class="card panel panel-events">
+          <div class="panel-header">
+            <div>
+              <h2>Recent Danger Events</h2>
+              <p id="events-meta">0건</p>
+            </div>
+            <div class="polling">
+              <span class="dot pulse"></span>
+              <span id="polling-text">Auto refresh: ON (3s)</span>
+            </div>
+          </div>
+          <div class="event-list-wrap">
+            <table class="event-table">
+              <thead>
+                <tr>
+                  <th>시간</th>
+                  <th>소스</th>
+                  <th>요약</th>
+                  <th>RAG</th>
+                </tr>
+              </thead>
+              <tbody id="event-tbody">
+                <tr>
+                  <td colspan="4" class="empty-row">이벤트를 기다리는 중입니다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="card panel panel-detail">
+          <div class="panel-header">
+            <div>
+              <h2>Event Response Detail</h2>
+              <p id="detail-event-id">선택된 이벤트 없음</p>
+            </div>
+            <span class="badge strong" id="detail-rag-source">-</span>
+          </div>
+
+          <div class="detail-block">
+            <h3>상황 요약</h3>
+            <p id="detail-summary">왼쪽 이벤트를 선택하면 상세가 표시됩니다.</p>
+          </div>
+
+          <div class="detail-block">
+            <h3>운영자 대응 문장</h3>
+            <p id="detail-operator">-</p>
+          </div>
+
+          <div class="detail-block">
+            <h3>Jetson TTS</h3>
+            <p class="tts" id="detail-tts">-</p>
+          </div>
+
+          <div class="detail-block">
+            <h3>참고 매뉴얼</h3>
+            <ul id="detail-references" class="reference-list">
+              <li class="reference-empty">참고 매뉴얼 없음</li>
+            </ul>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="/admin/static/app.js" defer></script>
+  </body>
+</html>
