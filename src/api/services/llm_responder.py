@@ -6,6 +6,13 @@ from src.api.models import GeminiSafetyResponse, RAGReference
 
 
 class LLMResponder:
+    HAZARD_KEYWORDS: dict[str, tuple[str, ...]] = {
+        "fire": ("화재", "연기", "불꽃", "가열", "과열"),
+        "fall": ("낙상", "전도", "미끄", "넘어"),
+        "intrusion": ("무단", "침입", "위협", "폭력", "이상행동", "비인가"),
+        "electrical": ("전기", "누전", "합선", "스파크", "감전"),
+    }
+
     def __init__(self, config: ApiConfig) -> None:
         self.config = config
         self.logger = logging.getLogger(__name__)
@@ -35,16 +42,44 @@ class LLMResponder:
 
         self._client = genai.Client(api_key=self.config.google_api_key)
 
-    async def build_response(self, situation: str, references: list[RAGReference]) -> tuple[str, str]:
+    def _normalize_hazard_hint(self, hazard_hint: str | None) -> str:
+        value = (hazard_hint or "").strip().lower()
+        if value in {"fire", "fall", "intrusion", "electrical", "general"}:
+            return value
+        return "general"
+
+    def _contains_cross_hazard_terms(self, text: str, hazard_hint: str) -> bool:
+        if hazard_hint == "general":
+            return False
+        lowered = text.lower()
+        for hazard, keywords in self.HAZARD_KEYWORDS.items():
+            if hazard == hazard_hint:
+                continue
+            if any(keyword in lowered for keyword in keywords):
+                return True
+        return False
+
+    async def build_response(
+        self,
+        situation: str,
+        references: list[RAGReference],
+        hazard_hint: str | None = None,
+    ) -> tuple[str, str]:
+        normalized_hint = self._normalize_hazard_hint(hazard_hint)
         self._ensure_client()
         if self._client is None:
-            return self._fallback_response(situation=situation, references=references)
+            return self._fallback_response(
+                situation=situation,
+                references=references,
+                hazard_hint=normalized_hint,
+            )
 
         ref_text = "\n".join([f"- {ref.title}: {ref.content}" for ref in references]) or "- 일반 안전 수칙 준수"
         prompt = f"""
 너는 산업 안전 관제 AI다.
 아래 상황 설명과 참고 매뉴얼을 근거로 대응 지침을 생성하라.
 중요: 현장 경보(사이렌/LED)는 이미 발령된 상태다. 따라서 사후 대응 지침을 구체적으로 작성하라.
+위험 유형 힌트: {normalized_hint}
 
 [상황 설명]
 {situation}
@@ -62,6 +97,9 @@ class LLMResponder:
 - 1~2문장.
 - 현장 작업자가 즉시 따라야 할 행동을 직접 지시.
 - 짧지만 구체적으로 작성.
+3) 유형 일관성:
+- 위험 유형 힌트가 `general`이 아니면 해당 유형 중심으로만 작성.
+- 관련 없는 유형(예: 낙상 상황에서 화재 지침)으로 확장하지 말 것.
 """
 
         try:
@@ -85,12 +123,37 @@ class LLMResponder:
                 jetson = jetson[:180].rstrip()
             if not operator or not jetson:
                 raise RuntimeError("Structured response missing required fields")
+
+            if self._contains_cross_hazard_terms(f"{operator}\n{jetson}", normalized_hint):
+                self.logger.warning(
+                    "Gemini response mixed hazard types. Falling back to deterministic template. hint=%s",
+                    normalized_hint,
+                )
+                return self._fallback_response(
+                    situation=situation,
+                    references=references,
+                    hazard_hint=normalized_hint,
+                )
+
             return operator, jetson
         except Exception as exc:
             self.logger.warning("Gemini structured response failed. Fallback template used: %s", exc)
-            return self._fallback_response(situation=situation, references=references)
+            return self._fallback_response(
+                situation=situation,
+                references=references,
+                hazard_hint=normalized_hint,
+            )
 
-    def _infer_hazard_type(self, situation: str, references: list[RAGReference]) -> str:
+    def _infer_hazard_type(
+        self,
+        situation: str,
+        references: list[RAGReference],
+        hazard_hint: str | None = None,
+    ) -> str:
+        normalized_hint = self._normalize_hazard_hint(hazard_hint)
+        if normalized_hint != "general":
+            return normalized_hint
+
         joined = " ".join(
             [situation, *[ref.title for ref in references], *[ref.content for ref in references], *[" ".join(ref.tags) for ref in references]]
         ).lower()
@@ -104,8 +167,17 @@ class LLMResponder:
             return "electrical"
         return "general"
 
-    def _fallback_response(self, situation: str, references: list[RAGReference]) -> tuple[str, str]:
-        hazard_type = self._infer_hazard_type(situation=situation, references=references)
+    def _fallback_response(
+        self,
+        situation: str,
+        references: list[RAGReference],
+        hazard_hint: str | None = None,
+    ) -> tuple[str, str]:
+        hazard_type = self._infer_hazard_type(
+            situation=situation,
+            references=references,
+            hazard_hint=hazard_hint,
+        )
         primary_ref = references[0].content if references else "표준 안전 절차를 적용하십시오."
 
         operator_templates = {
