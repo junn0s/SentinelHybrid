@@ -124,15 +124,29 @@ uv sync
 # 2) 환경 변수 파일 준비 (.env)
 cp .env.example .env
 # .env 파일에서 GOOGLE_API_KEY를 본인 키로 수정
+# 기본 MCP 실행: streamable_http + autostart (요청마다 MCP 재기동 방지)
+# MCP 타임아웃 권장값: RAG_MCP_TIMEOUT_SEC=10.0
+# 기본 임베딩 모델: intfloat/multilingual-e5-small (bge-m3 대비 가벼움)
 
 # 3) Edge 파이프라인 실행 (Jetson)
 python -m src.edge.main
 
 # 4) FastAPI 서버 실행
-uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 
 # 5) 테스트 실행
 pytest -q
+```
+
+```text
+관리자 대시보드: http://127.0.0.1:8000/admin
+API 문서:        http://127.0.0.1:8000/docs
+```
+
+시뮬레이터 위험 시나리오 테스트:
+```bash
+python src/sim/send_mock_danger_event.py --count 5 --interval 2 --scenario mixed
+# 또는 --scenario fire / fall / intrusion / electrical
 ```
 
 

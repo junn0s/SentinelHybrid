@@ -52,10 +52,14 @@
 - `LLM_PROVIDER=gemini`
 - `GEMINI_MODEL=gemini-3-flash-preview`
 - `RAG_MCP_ENABLED=true`
-- `RAG_MCP_TRANSPORT=stdio`
+- `RAG_MCP_TRANSPORT=streamable_http`
+- `RAG_MCP_HOST=127.0.0.1`
+- `RAG_MCP_PORT=8765`
+- `RAG_MCP_PATH=/mcp`
+- `RAG_MCP_AUTOSTART=true`
 - `RAG_MCP_COMMAND` 기본값: 현재 파이썬 실행파일
 - `RAG_MCP_ARGS` 기본값: `-m src.mcp.rag_server`
-- `RAG_MCP_TIMEOUT_SEC=2.0`
+- `RAG_MCP_TIMEOUT_SEC=10.0`
 - `RAG_TOP_K=3`
 
 ## 5. 로컬 실행 방법
@@ -80,17 +84,17 @@ python src/sim/send_mock_danger_event.py --count 5 --interval 2 --timeout 12
 - `http://127.0.0.1:8000/events/<event_id>/response`
 
 ## 6. 현재 알려진 이슈
-- `stdio` 기반 MCP 연결에서 요청마다 FastMCP 시작 로그가 반복될 수 있음
-- 간헐적으로 MCP 조회가 지연되어 타임아웃 후 `local-fallback` 경로로 처리됨
-- 기능상 동작은 유지되지만 응답 지연/일관성 관점에서 개선 필요
+- Gemini 무료 티어 쿼터 초과 시(`429`) LLM 응답이 fallback 템플릿으로 내려감
+- MCP 검색은 동작하지만, 참고 매뉴얼 정렬 정확도는 추가 리랭킹이 필요
+- 기능상 동작은 유지되지만 응답 품질/일관성 관점에서 개선 필요
 
 ## 7. 다음 작업 우선순위
-1. MCP 연결 재사용 안정화
-- 단건 요청마다 서버 재초기화되는 패턴 최소화
+1. MCP 검색 결과 리랭킹 추가
+- 위험 유형별 문서 우선순위 강화(전기/화재 등)
 2. MCP 실패율/지연시간 지표 로깅 추가
 - 응답 품질 저하 원인 추적 가능하도록 메트릭 확보
-3. 필요 시 `streamable_http` 전환 검토
-- 로컬/개발 환경에서는 `stdio`, 운영형 테스트에서는 상시 서버 방식 비교
+3. streamable_http 상시 MCP 서버 운영 모니터링
+- 포트 점유/프로세스 헬스체크 자동화
 4. Jetson 실장비 연동 전 E2E 시뮬레이션 고정 테스트 작성
 - 성공률, 평균 지연, fallback 비율 점검
 
