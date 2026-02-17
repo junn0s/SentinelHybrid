@@ -6,4 +6,3 @@ sentinelhybrid-venv/
 data/
 .env
 .env.*
-!.env.example
