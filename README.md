@@ -121,13 +121,17 @@ SentinelHybrid/
 # 1) 가상환경/패키지 설치
 uv sync
 
-# 2) Edge 파이프라인 실행 (Jetson)
+# 2) 환경 변수 파일 준비 (.env)
+cp .env.example .env
+# .env 파일에서 GOOGLE_API_KEY를 본인 키로 수정
+
+# 3) Edge 파이프라인 실행 (Jetson)
 python -m src.edge.main
 
-# 3) FastAPI 서버 실행
+# 4) FastAPI 서버 실행
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 
-# 4) 테스트 실행
+# 5) 테스트 실행
 pytest -q
 ```
 

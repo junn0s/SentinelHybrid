@@ -3,6 +3,14 @@ import shlex
 import sys
 from dataclasses import dataclass
 
+try:
+    from dotenv import load_dotenv
+except Exception:  # pragma: no cover
+    load_dotenv = None
+
+if load_dotenv is not None:
+    load_dotenv()
+
 
 @dataclass
 class ApiConfig:
