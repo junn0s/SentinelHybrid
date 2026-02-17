@@ -21,15 +21,27 @@ class VLMClient:
 
         is_danger = red_ratio > 0.75
         confidence = min(0.99, max(0.01, red_ratio / 2.0))
+        hazard_type = "safe"
 
         if is_danger:
-            summary = "위험 징후가 감지되었습니다. 즉시 주변을 확인하세요."
+            if red_ratio > 1.15 and red > 120:
+                hazard_type = "fire"
+                summary = "작업 구역에서 화재/과열 의심 징후가 감지되었습니다."
+            elif red_ratio > 0.95 and red > 95:
+                hazard_type = "electrical"
+                summary = "전기 설비 주변에서 스파크 의심 징후가 감지되었습니다."
+            else:
+                hazard_type = "general"
+                summary = "작업 구역 경계에서 비정상 위험 행동 징후가 감지되었습니다."
         else:
             summary = "특이 위험 상황은 감지되지 않았습니다."
 
         meta = {
             "heuristic": "red_ratio",
+            "hazard_type": hazard_type,
             "red_ratio": round(red_ratio, 4),
+            "mean_blue": round(blue, 2),
+            "mean_green": round(green, 2),
+            "mean_red": round(red, 2),
         }
         return is_danger, summary, confidence, meta
-

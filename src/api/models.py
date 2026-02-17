@@ -38,8 +38,18 @@ class DangerEventAck(BaseModel):
 
 class GeminiSafetyResponse(BaseModel):
     operator_response: str = Field(
-        description="관리자용 상세 대응 지침. 2~4문장으로 작성한다."
+        description=(
+            "관리자용 상세 대응 지침. 감지 상황 재진술 + 즉시 통제 + 인원 보호/보고 + 재개 조건을 "
+            "포함해 3~5문장으로 작성한다."
+        ),
+        min_length=80,
+        max_length=1000,
     )
     jetson_tts_summary: str = Field(
-        description="Jetson 현장 음성 안내용 한 문장. 최대 40자 권장."
+        description=(
+            "Jetson 현장 음성 안내용 1~2문장 지침. 이미 알람이 울린 상태를 전제로 "
+            "현장에서 즉시 수행할 행동을 명령형으로 작성한다."
+        ),
+        min_length=24,
+        max_length=180,
     )
