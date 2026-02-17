@@ -1,13 +1,14 @@
 <div align="center">
 
+
 # SentinelHybrid
+<img src="./docs/images/image.png" width="80"/>
 
 > **Jetson Orin Nano 기반 하이브리드 실시간 위험 감지 대응 시스템**  
 > **On-device Safety + Cloud RAG Intelligence**
 
 <br/>
 </div>
-
 
 
 SentinelHybrid는 현장에서 즉시 반응하는 **온디바이스 안전 대응**과, 클라우드에서 지식기반으로 정교하게 대응하는 **RAG 인텔리전스**를 결합한 안전 시스템입니다.
@@ -32,7 +33,7 @@ SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합�
 ## 2. 전체 아키텍처
 
 <p align="center">
-  <img src="./pipeline.png" alt="SentinelHybrid Pipeline" width="980" />
+  <img src="./docs/images/pipeline.png" alt="SentinelHybrid Pipeline" width="980" />
 </p>
 
 > Jetson 온디바이스 추론과 FastAPI + MCP + RAG 클라우드 대응 체계를 하나의 파이프라인으로 통합합니다.
