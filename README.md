@@ -1,187 +1,109 @@
 # SentinelHybrid
 
-> **Jetson Orin Nano 기반 하이브리드 실시간 위험 감지 대응 시스템**  
-> **On-device Safety + Cloud RAG Intelligence**
+Jetson Orin Nano(Edge) + FastAPI/LLM(Cloud) 기반의 실시간 위험 대응 파이프라인입니다.
 
-SentinelHybrid는 현장에서 즉시 반응하는 **온디바이스 안전 대응**과, 클라우드에서 지식기반으로 정교하게 대응하는 **RAG 인텔리전스**를 결합한 안전 시스템입니다.
+## 현재 구현 범위
+- Edge 루프(`src/edge/main.py`)
+  - 카메라 프레임 주기 분석
+  - 위험 감지 시 로컬 알림(LED/사이렌 시뮬레이션)
+  - 위험 이벤트를 서버로 전송
+- API 서버(`src/api/main.py`)
+  - `/events/danger` 수신, 최근 이벤트/응답 메모리 보관
+  - Gemini 구조화 출력 + RAG 매뉴얼 기반 대응문 생성
+  - 관리자 대시보드(`/admin`) 제공
+- RAG/MCP(`src/mcp/rag_server.py`)
+  - FastMCP 툴 `retrieve_guidelines`
+  - Chroma + sentence-transformers 임베딩 검색
+  - 실패 시 키워드 fallback 검색
+- 시뮬레이터(`src/sim/send_mock_danger_event.py`)
+  - `mixed/fire/fall/intrusion/electrical` 시나리오 전송
 
-카메라 입력을 Jetson Orin Nano에서 실시간 분석하고, 위험 상황일 때만 서버와 연동해 대응 매뉴얼 생성, 로그 적재, 슬랙 알림, 음성 안내까지 자동으로 수행합니다.
-
----
-
-## 1. 프로젝트 목표
-
-기존 영상 감지 시스템은 `감지`에서 끝나는 경우가 많습니다.  
-SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합니다.
-
-- 현장 경고: LED 점멸, 사이렌, 안내 음성
-- 서버 대응: 상황 해석, RAG 기반 매뉴얼 생성
-- 운영 연계: 로그 저장, Slack 전파, 추후 분석
-
-즉, "위험을 찾는 시스템"이 아니라 "**위험에 대응하는 시스템**"을 목표로 합니다.
-
----
-
-## 2. 전체 아키텍처
-
+## 아키텍처
 <p align="center">
   <img src="./pipeline.png" alt="SentinelHybrid Pipeline" width="980" />
 </p>
 
-> Jetson 온디바이스 추론과 FastAPI + MCP + RAG 클라우드 대응 체계를 하나의 파이프라인으로 통합합니다.
-
----
-
-## 3. 핵심 동작 파이프라인
-
-1. Jetson에 연결된 카메라에서 프레임 입력을 받습니다.
-2. 일정 프레임 간격으로 온디바이스 VLM 추론을 수행합니다.
-3. 위험 상황으로 판단되면 Jetson이 즉시 로컬 대응을 시작합니다.
-4. 동시에 상황 설명 텍스트를 FastAPI 서버로 전송합니다.
-5. 서버는 Gemini + MCP + RAG를 통해 상황별 대응 매뉴얼을 생성합니다.
-6. 생성된 매뉴얼은 Jetson으로 다시 전달됩니다.
-7. Jetson은 스피커를 통해 대응 문장을 음성으로 안내합니다.
-8. 서버는 동일 이벤트를 Supabase에 기록하고 Slack으로 전파합니다.
-
----
-
-## 4. 왜 하이브리드인가?
-
-### On-device (Jetson) 역할
-- 네트워크 상태와 무관하게 즉시 위험 감지/경고
-- 지연이 치명적인 순간에 빠른 1차 대응
-
-### Cloud (FastAPI + RAG) 역할
-- 상황 맥락 기반 판단 고도화
-- 매뉴얼/정책/히스토리 기반 대응 지시 생성
-- 운영 시스템(Slack, 로그 저장소)과 연동
-
-### 결론
-- **속도는 Edge**, **지식과 확장성은 Cloud**에서 담당
-- 현장성과 운영성을 동시에 확보
-
----
-
-## 5. 기술 스택
-
-| 영역 | 기술 |
-|---|---|
-| Edge Device | Jetson Orin Nano |
-| Vision Inference | On-device VLM (Gemma 3 4B) |
-| Backend API | FastAPI |
-| Language | Python |
-| LLM Reasoning | Gemini API |
-| Orchestration | LangChain |
-| Context Protocol | MCP (Model Context Protocol) |
-| RAG | Chroma / Pinecone (MCP 연동) |
-| Logging | Supabase (MCP 연동) |
-| Alerting | Slack MCP |
-| Local Response | LED, Siren, TTS Speaker |
-
----
-
-## 6. MCP 기반 확장 포인트
-
-SentinelHybrid는 MCP를 통해 외부 도구를 "호출 가능한 컨텍스트"로 표준화해 연결합니다.
-
-- **RAG MCP**: 상황 문맥에 맞는 대응 절차 검색/요약
-- **Supabase MCP**: 사건 로그 저장, 이력 조회, 사후 분석 데이터 축적
-- **Slack MCP**: 관리자/운영 채널에 실시간 전파 및 협업 대응
-
-이 구조를 사용하면 도구를 교체하거나 추가할 때도 핵심 파이프라인 변경을 최소화할 수 있습니다.
-
----
-
-## 프로젝트 구조
-
-아래는 현재 프로젝트의 디렉토리 구조입니다.
-
+## 디렉토리 구조(실제 기준)
 ```text
 SentinelHybrid/
 ├── README.md
+├── RELEASE_NOTES_v0.4.0.md
+├── .env.example
+├── requirements.txt
 ├── pipeline.png
-├── src/
-│   ├── config/                 # YAML/ENV 설정, 모델/임계치/장치 파라미터
-│   ├── edge/                   # Jetson 추론 루프, 카메라 입력, LED/사이렌/TTS 제어
-│   ├── api/                    # FastAPI 엔드포인트, 이벤트 수신/응답
-│   ├── orchestrator/           # LangChain + MCP 체인 오케스트레이션
-│   ├── rag/                    # 임베딩, 검색, 매뉴얼 생성 로직
-│   ├── integrations/           # Slack/Supabase/Pinecone/Chroma 어댑터
-│   └── utils/                  # 공통 유틸리티
-├── scripts/                    # 실행/배포/테스트 스크립트
-├── tests/                      # 단위/통합 테스트
-└── docs/                       # 운영 가이드, 장애 대응 문서
+├── data/
+│   └── events/                      # danger_events.jsonl, danger_responses.jsonl
+└── src/
+    ├── api/
+    │   ├── main.py                  # FastAPI 진입점
+    │   ├── config.py                # API 환경변수 로딩
+    │   ├── models.py                # Pydantic 모델
+    │   ├── services/
+    │   │   ├── pipeline.py          # MCP/Local RAG + LLM 응답 파이프라인
+    │   │   ├── mcp_rag.py           # MCP retriever
+    │   │   ├── local_rag.py         # 로컬 fallback retriever
+    │   │   └── llm_responder.py     # Gemini 구조화 출력 + fallback 템플릿
+    │   └── static/admin/            # 관리자 대시보드 (HTML/CSS/JS)
+    ├── edge/
+    │   ├── main.py                  # Jetson/로컬 추론 루프
+    │   ├── vlm_client.py            # 임시 VLM/휴리스틱 분석
+    │   ├── alerts.py                # LED/사이렌 제어(현재 시뮬레이션 중심)
+    │   ├── server_client.py         # API 이벤트 전송
+    │   └── config.py                # Edge 환경변수
+    ├── mcp/
+    │   └── rag_server.py            # FastMCP RAG 서버
+    ├── rag/
+    │   ├── default_manuals.json     # 기본 안전 매뉴얼
+    │   └── manual_repository.py     # 로드/검색 유틸
+    └── sim/
+        └── send_mock_danger_event.py
 ```
 
----
-
-## 프로젝트 실행 및 테스트
-
+## 빠른 실행
+### 1) 환경 준비
 ```bash
-# 1) 가상환경/패키지 설치
 uv sync
-
-# 2) 환경 변수 파일 준비 (.env)
 cp .env.example .env
-# .env 파일에서 GOOGLE_API_KEY를 본인 키로 수정
-# 기본 MCP 실행: streamable_http + autostart (요청마다 MCP 재기동 방지)
-# MCP 타임아웃 권장값: RAG_MCP_TIMEOUT_SEC=10.0
-# 기본 임베딩 모델: intfloat/multilingual-e5-small (bge-m3 대비 가벼움)
+# .env에서 GOOGLE_API_KEY 설정
+```
 
-# 3) Edge 파이프라인 실행 (Jetson)
-python -m src.edge.main
+### 2) MCP RAG 서버 실행 (터미널 1)
+```bash
+SENTINEL_MCP_TRANSPORT=streamable-http \
+SENTINEL_MCP_HOST=127.0.0.1 \
+SENTINEL_MCP_PORT=8765 \
+SENTINEL_MCP_PATH=/mcp \
+python -m src.mcp.rag_server
+```
 
-# 4) FastAPI 서버 실행
+### 3) FastAPI 실행 (터미널 2)
+```bash
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000
-
-# 5) 테스트 실행
-pytest -q
 ```
 
-```text
-관리자 대시보드: http://127.0.0.1:8000/admin
-API 문서:        http://127.0.0.1:8000/docs
-```
-
-시뮬레이터 위험 시나리오 테스트:
+### 4) 시뮬레이터 테스트 (터미널 3)
 ```bash
 python src/sim/send_mock_danger_event.py --count 5 --interval 2 --scenario mixed
-# 또는 --scenario fire / fall / intrusion / electrical
 ```
 
+### 5) 대시보드 확인
+- [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin)
+- [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
----
+## 주요 API
+- `GET /health`
+- `GET /events/recent`
+- `GET /events/{event_id}/response`
+- `POST /events/danger`
 
-## WBS Gantt Chart (5 Weeks)
+## 환경 변수 핵심
+`.env.example` 기준 주요 항목:
+- `GOOGLE_API_KEY`, `GEMINI_MODEL`
+- `RAG_MCP_TRANSPORT`, `RAG_MCP_HOST`, `RAG_MCP_PORT`, `RAG_MCP_PATH`
+- `RAG_MCP_TIMEOUT_SEC`, `RAG_TOP_K`
+- `RAG_CHROMA_PATH`, `RAG_CHROMA_COLLECTION`
+- `RAG_EMBEDDING_MODEL`, `RAG_EMBEDDING_DEVICE`
 
-```mermaid
-gantt
-    title SentinelHybrid - WBS (5 Weeks from 2026-02-14)
-    dateFormat  YYYY-MM-DD
-    axisFormat  %m/%d
-
-    section 환경 구성
-    요구사항 확정 및 범위 정의                     :done,   a1, 2026-02-14, 2d
-    Jetson 장치 연결 점검 (카메라/LED/스피커)     :active, a2, after a1, 3d
-    API/MCP 연동 환경 세팅                         :active, a3, after a2, 2d
-
-    section Edge Pipeline
-    프레임 샘플링 + 온디바이스 추론 루프 구현      :active, b1, after a3, 3d
-    위험 임계치/이벤트 트리거 튜닝                 :active, b2, after b1, 2d
-    로컬 경고 액션(LED/사이렌/TTS) 통합            :active, b3, after b2, 2d
-
-    section Cloud Intelligence
-    FastAPI 이벤트 수신/응답 API 고도화            :active, c1, after b3, 3d
-    Gemini + LangChain + MCP 체인 구성             :active, c2, after c1, 3d
-    RAG 검색 및 매뉴얼 생성 품질 개선              :active, c3, after c2, 2d
-
-    section Ops Integration
-    Supabase 로그 스키마/적재                       :active, d1, after c3, 3d
-    Slack 알림 템플릿/심각도 정책                   :active, d2, after d1, 2d
-    End-to-End 통합 테스트                           :active, d3, after d2, 2d
-
-    section Validation & Release
-    현장 시나리오 리허설 및 회귀 테스트             :active, e1, after d3, 3d
-    성능/지연 측정 및 임계치 재조정                 :active, e2, after e1, 2d
-    배포 점검 및 결과 문서화                         :active, e3, after e2, 3d
-```
+## 참고
+- Gemini 무료 티어 제한 시 `429 RESOURCE_EXHAUSTED`가 발생할 수 있으며,
+  이 경우 서버는 fallback 템플릿 응답으로 계속 동작합니다.
