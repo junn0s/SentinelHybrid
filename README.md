@@ -1,7 +1,14 @@
+<div align="center">
+
 # SentinelHybrid
 
 > **Jetson Orin Nano 기반 하이브리드 실시간 위험 감지 대응 시스템**  
 > **On-device Safety + Cloud RAG Intelligence**
+
+<br/>
+</div>
+
+
 
 SentinelHybrid는 현장에서 즉시 반응하는 **온디바이스 안전 대응**과, 클라우드에서 지식기반으로 정교하게 대응하는 **RAG 인텔리전스**를 결합한 안전 시스템입니다.
 
@@ -64,19 +71,19 @@ SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합�
 
 ## 5. 기술 스택
 
-| 영역 | 기술 |
-|---|---|
-| Edge Device | Jetson Orin Nano |
-| Vision Inference | On-device VLM (Gemma 3 4B) |
-| Backend API | FastAPI |
-| Language | Python |
-| LLM Reasoning | Gemini API |
-| Orchestration | LangChain |
-| Context Protocol | MCP (Model Context Protocol) |
-| RAG | Chroma / Pinecone (MCP 연동) |
-| Logging | Supabase (MCP 연동) |
-| Alerting | Slack MCP |
-| Local Response | LED, Siren, TTS Speaker |
+| 영역 | 기술 (Stack) | 상세 |
+|:---:|:---|:---|
+| **Edge Device** | ![Jetson Orin Nano](https://img.shields.io/badge/Jetson%20Orin%20Nano-76B900?style=flat-square&logo=nvidia&logoColor=white) | NVIDIA Jetson Orin Nano (8GB) |
+| **Vision Inference** | ![Gemma 3 4B](https://img.shields.io/badge/Gemma%203%204B-4285F4?style=flat-square&logo=google&logoColor=white) | On-device VLM (Gemma 3 4B) |
+| **Backend API** | ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white) | Python async server |
+| **Language** | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Python 3.12 |
+| **LLM Reasoning** | ![Gemini API](https://img.shields.io/badge/Gemini%20API-8E75B2?style=flat-square&logo=google+gemini&logoColor=white) | Cloud reasoning |
+| **Orchestration** | ![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=flat-square&logo=langchain&logoColor=white) | Agent orchestration |
+| **Context Protocol** | ![MCP](https://img.shields.io/badge/MCP-000000?style=flat-square) | Model Context Protocol |
+| **RAG** | ![Chroma](https://img.shields.io/badge/Chroma-FFB000?style=flat-square) ![Pinecone](https://img.shields.io/badge/Pinecone-1E90FF?style=flat-square) | Vector DB (MCP) |
+| **Logging** | ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white) | Logging/DB (MCP) |
+| **Alerting** | ![Slack MCP](https://img.shields.io/badge/Slack%20MCP-4A154B?style=flat-square&logo=slack&logoColor=white) | Real-time alerting(MCP) |
+| **Local Response** | `LED` `Siren` `TTS Speaker` | Local actuators (GPIO/USB Audio) |
 
 ---
 
