@@ -135,11 +135,11 @@ def retrieve_guidelines(query: str, top_k: int = 3) -> dict:
 
 
 if __name__ == "__main__":
-    transport = os.getenv("SENTINEL_MCP_TRANSPORT", "stdio")
+    transport = os.getenv("RAG_SERVER_MCP_TRANSPORT", os.getenv("SENTINEL_MCP_TRANSPORT", "stdio"))
     if transport == "streamable-http":
-        host = os.getenv("SENTINEL_MCP_HOST", "127.0.0.1")
-        port = int(os.getenv("SENTINEL_MCP_PORT", "8765"))
-        path = os.getenv("SENTINEL_MCP_PATH", "/mcp")
+        host = os.getenv("RAG_SERVER_MCP_HOST", os.getenv("SENTINEL_MCP_HOST", "127.0.0.1"))
+        port = int(os.getenv("RAG_SERVER_MCP_PORT", os.getenv("SENTINEL_MCP_PORT", "8765")))
+        path = os.getenv("RAG_SERVER_MCP_PATH", os.getenv("SENTINEL_MCP_PATH", "/mcp"))
         mcp.run(
             transport="streamable-http",
             host=host,
