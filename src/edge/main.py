@@ -19,12 +19,27 @@ def _setup_logging(level: str) -> None:
     )
 
 
+def _extract_tts_summary(ack: dict) -> str:
+    response = ack.get("response")
+    if isinstance(response, dict):
+        text = response.get("jetson_tts_summary")
+        if isinstance(text, str):
+            return text.strip()
+    return ""
+
+
 def run() -> None:
     cfg = EdgeConfig.from_env()
     _setup_logging(cfg.log_level)
     logger = logging.getLogger(__name__)
 
-    alerts = AlertController(led_pin=cfg.led_gpio_pin, simulate_only=cfg.simulate_alert_only)
+    alerts = AlertController(
+        led_pin=cfg.led_gpio_pin,
+        simulate_only=cfg.simulate_alert_only,
+        tts_enabled=cfg.tts_enabled,
+        tts_command=cfg.tts_command,
+        tts_timeout_sec=cfg.tts_timeout_sec,
+    )
     client = DangerEventClient(
         base_url=cfg.server_base_url,
         endpoint=cfg.danger_endpoint,
@@ -89,9 +104,21 @@ def run() -> None:
             }
 
             alerts.trigger_danger(duration_sec=cfg.alert_duration_sec)
-            sent = client.send(payload)
-            if not sent:
+            ack = client.send(payload)
+            if ack is None:
                 logger.error("Server send failed. event_id=%s payload=%s", event_id, payload)
+                if cfg.tts_use_event_summary_fallback:
+                    alerts.speak(summary)
+                continue
+
+            tts_summary = _extract_tts_summary(ack)
+            if not tts_summary and cfg.tts_use_event_summary_fallback:
+                tts_summary = summary
+
+            if tts_summary:
+                alerts.speak(tts_summary)
+            else:
+                logger.info("No TTS summary returned by server. event_id=%s", event_id)
     finally:
         alerts.cleanup()
         cap.release()
@@ -100,4 +127,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-

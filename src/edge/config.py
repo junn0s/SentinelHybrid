@@ -15,6 +15,10 @@ class EdgeConfig:
     alert_duration_sec: int = 3
     led_gpio_pin: int = 17
     simulate_alert_only: bool = True
+    tts_enabled: bool = True
+    tts_command: str | None = None
+    tts_timeout_sec: int = 8
+    tts_use_event_summary_fallback: bool = True
     log_level: str = "INFO"
 
     @classmethod
@@ -31,6 +35,9 @@ class EdgeConfig:
             alert_duration_sec=int(os.getenv("EDGE_ALERT_DURATION_SEC", "3")),
             led_gpio_pin=int(os.getenv("EDGE_LED_GPIO_PIN", "17")),
             simulate_alert_only=os.getenv("EDGE_SIMULATE_ALERT_ONLY", "true").lower() == "true",
+            tts_enabled=os.getenv("EDGE_TTS_ENABLED", "true").lower() == "true",
+            tts_command=(os.getenv("EDGE_TTS_COMMAND") or "").strip() or None,
+            tts_timeout_sec=int(os.getenv("EDGE_TTS_TIMEOUT_SEC", "8")),
+            tts_use_event_summary_fallback=os.getenv("EDGE_TTS_EVENT_SUMMARY_FALLBACK", "true").lower() == "true",
             log_level=os.getenv("EDGE_LOG_LEVEL", "INFO").upper(),
         )
-
