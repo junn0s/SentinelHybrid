@@ -32,6 +32,8 @@ class EdgeConfig:
     simulate_alert_only: bool = True
     tts_enabled: bool = True
     tts_command: str | None = None
+    tts_piper_model: str | None = None
+    tts_piper_speaker_id: int | None = None
     tts_timeout_sec: int = 8
     tts_use_event_summary_fallback: bool = True
     log_level: str = "INFO"
@@ -44,6 +46,8 @@ class EdgeConfig:
         parsed_safe_led_pins = [int(item) for item in safe_led_pin_items] if safe_led_pin_items else None
         buzzer_pin_raw = (os.getenv("EDGE_BUZZER_GPIO_PIN", "") or "").strip()
         parsed_buzzer_pin = int(buzzer_pin_raw) if buzzer_pin_raw else None
+        tts_speaker_raw = (os.getenv("EDGE_TTS_PIPER_SPEAKER_ID", "") or "").strip()
+        parsed_tts_speaker = int(tts_speaker_raw) if tts_speaker_raw else None
 
         return cls(
             camera_index=int(os.getenv("EDGE_CAMERA_INDEX", "0")),
@@ -74,6 +78,8 @@ class EdgeConfig:
             simulate_alert_only=os.getenv("EDGE_SIMULATE_ALERT_ONLY", "true").lower() == "true",
             tts_enabled=os.getenv("EDGE_TTS_ENABLED", "true").lower() == "true",
             tts_command=(os.getenv("EDGE_TTS_COMMAND") or "").strip() or None,
+            tts_piper_model=(os.getenv("EDGE_TTS_PIPER_MODEL") or "").strip() or None,
+            tts_piper_speaker_id=parsed_tts_speaker,
             tts_timeout_sec=int(os.getenv("EDGE_TTS_TIMEOUT_SEC", "8")),
             tts_use_event_summary_fallback=os.getenv("EDGE_TTS_EVENT_SUMMARY_FALLBACK", "true").lower() == "true",
             log_level=os.getenv("EDGE_LOG_LEVEL", "INFO").upper(),

@@ -1,7 +1,9 @@
 import logging
+from pathlib import Path
 import shlex
 import shutil
 import subprocess
+import tempfile
 import time
 
 
@@ -19,10 +21,14 @@ class AlertController:
         simulate_only: bool = True,
         tts_enabled: bool = True,
         tts_command: str | None = None,
+        tts_piper_model: str | None = None,
+        tts_piper_speaker_id: int | None = None,
         tts_timeout_sec: int = 8,
     ) -> None:
         self.simulate_only = simulate_only
         self.tts_enabled = tts_enabled
+        self.tts_piper_model = tts_piper_model
+        self.tts_piper_speaker_id = tts_piper_speaker_id
         self.tts_timeout_sec = tts_timeout_sec
         self.siren_on_sec = max(0.01, float(siren_on_sec))
         self.siren_off_sec = max(0.01, float(siren_off_sec))
@@ -107,10 +113,14 @@ class AlertController:
             self.logger.warning("Configured TTS command unavailable: %s", tts_command)
             return None
 
+        # Prefer local neural TTS via Piper when model path + runtime are available.
+        if self._can_use_piper():
+            return ["piper"]
+
         for candidate in ("espeak-ng", "espeak", "spd-say", "say"):
             if shutil.which(candidate):
                 return [candidate]
-        self.logger.warning("No local TTS binary found. Tried espeak-ng/espeak/spd-say/say.")
+        self.logger.warning("No local TTS binary found. Tried piper+ffplay/espeak-ng/espeak/spd-say/say.")
         return None
 
     def _resolve_siren_command(self, siren_command: str | None) -> list[str] | None:
@@ -291,8 +301,17 @@ class AlertController:
             return
 
         try:
+            if self._tts_cmd[0] == "piper":
+                self._speak_with_piper(text)
+                return
+
+            if any("{text}" in token for token in self._tts_cmd):
+                cmd = [token.replace("{text}", text) for token in self._tts_cmd]
+            else:
+                cmd = [*self._tts_cmd, text]
+
             completed = subprocess.run(
-                [*self._tts_cmd, text],
+                cmd,
                 timeout=self.tts_timeout_sec,
                 check=False,
                 stdout=subprocess.DEVNULL,
@@ -302,6 +321,85 @@ class AlertController:
                 self.logger.warning("TTS command returned non-zero code=%s", completed.returncode)
         except Exception as exc:
             self.logger.warning("TTS playback failed: %s", exc)
+
+    def _can_use_piper(self) -> bool:
+        if not shutil.which("piper"):
+            return False
+        if not shutil.which("ffplay"):
+            self.logger.warning("ffplay not installed. Piper output playback unavailable.")
+            return False
+        if not self.tts_piper_model:
+            self.logger.warning("Piper model path not set. Set EDGE_TTS_PIPER_MODEL to use local neural TTS.")
+            return False
+        model_path = Path(self.tts_piper_model)
+        if not model_path.exists():
+            self.logger.warning("Piper model not found: %s", model_path)
+            return False
+        return True
+
+    def _speak_with_piper(self, text: str) -> None:
+        if not shutil.which("piper"):
+            self.logger.warning("piper not installed. Skipping neural TTS path.")
+            return
+
+        if not shutil.which("ffplay"):
+            self.logger.warning("ffplay not installed. Cannot play piper audio output.")
+            return
+
+        if not self.tts_piper_model:
+            self.logger.warning("Piper model path is empty. Set EDGE_TTS_PIPER_MODEL.")
+            return
+
+        model_path = Path(self.tts_piper_model)
+        if not model_path.exists():
+            self.logger.warning("Piper model not found: %s", model_path)
+            return
+
+        audio_path = None
+        try:
+            with tempfile.NamedTemporaryFile(prefix="piper_tts_", suffix=".wav", delete=False) as tmp:
+                audio_path = tmp.name
+
+            tts_cmd = [
+                "piper",
+                "--model",
+                str(model_path),
+                "--output_file",
+                audio_path,
+            ]
+            if self.tts_piper_speaker_id is not None:
+                tts_cmd.extend(["--speaker", str(self.tts_piper_speaker_id)])
+            tts_run = subprocess.run(
+                tts_cmd,
+                input=text,
+                text=True,
+                timeout=self.tts_timeout_sec,
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            if tts_run.returncode != 0:
+                self.logger.warning("piper returned non-zero code=%s", tts_run.returncode)
+                return
+
+            play_cmd = ["ffplay", "-nodisp", "-autoexit", audio_path]
+            play_run = subprocess.run(
+                play_cmd,
+                timeout=self.tts_timeout_sec + 5,
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            if play_run.returncode != 0:
+                self.logger.warning("ffplay returned non-zero code=%s while playing piper output", play_run.returncode)
+        except Exception as exc:
+            self.logger.warning("piper playback failed: %s", exc)
+        finally:
+            if audio_path:
+                try:
+                    Path(audio_path).unlink(missing_ok=True)
+                except Exception:
+                    pass
 
     def cleanup(self) -> None:
         self._buzzer_off()
