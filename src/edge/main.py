@@ -46,7 +46,14 @@ def run() -> None:
         timeout_sec=cfg.request_timeout_sec,
         retries=cfg.request_retries,
     )
-    vlm = VLMClient()
+    vlm = VLMClient(
+        provider=cfg.vlm_provider,
+        model=cfg.vlm_model,
+        ollama_url=cfg.vlm_ollama_url,
+        timeout_sec=cfg.vlm_timeout_sec,
+        keep_alive=cfg.vlm_keep_alive,
+        use_heuristic_fallback=cfg.vlm_use_heuristic_fallback,
+    )
 
     cap = cv2.VideoCapture(cfg.camera_index)
     if not cap.isOpened():
@@ -100,7 +107,8 @@ def run() -> None:
                 "is_danger": True,
                 "summary": summary,
                 "confidence": confidence,
-                "model": "gemma3-4b-placeholder",
+                "model": cfg.vlm_model,
+                "metadata": infer_meta,
             }
 
             alerts.trigger_danger(duration_sec=cfg.alert_duration_sec)
