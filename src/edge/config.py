@@ -23,6 +23,7 @@ class EdgeConfig:
     alert_duration_sec: int = 3
     led_gpio_pin: int = 17
     danger_led_pins: list[int] | None = None
+    gpio_pin_mode: str = "BCM"
     buzzer_gpio_pin: int | None = None
     siren_command: str | None = None
     siren_on_sec: float = 0.15
@@ -61,6 +62,7 @@ class EdgeConfig:
             alert_duration_sec=int(os.getenv("EDGE_ALERT_DURATION_SEC", "3")),
             led_gpio_pin=int(os.getenv("EDGE_LED_GPIO_PIN", "17")),
             danger_led_pins=parsed_led_pins,
+            gpio_pin_mode=(os.getenv("EDGE_GPIO_PIN_MODE", "BCM") or "BCM").strip().upper(),
             buzzer_gpio_pin=parsed_buzzer_pin,
             siren_command=(os.getenv("EDGE_SIREN_COMMAND") or "").strip() or None,
             siren_on_sec=float(os.getenv("EDGE_SIREN_ON_SEC", "0.15")),

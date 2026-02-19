@@ -36,6 +36,7 @@ def run() -> None:
     alerts = AlertController(
         led_pin=cfg.led_gpio_pin,
         led_pins=cfg.danger_led_pins,
+        gpio_pin_mode=cfg.gpio_pin_mode,
         buzzer_pin=cfg.buzzer_gpio_pin,
         siren_command=cfg.siren_command,
         siren_on_sec=cfg.siren_on_sec,
@@ -44,6 +45,14 @@ def run() -> None:
         tts_enabled=cfg.tts_enabled,
         tts_command=cfg.tts_command,
         tts_timeout_sec=cfg.tts_timeout_sec,
+    )
+    logger.info(
+        "Alert config: simulate=%s pin_mode=%s led_pins=%s buzzer_pin=%s siren_cmd=%s",
+        cfg.simulate_alert_only,
+        cfg.gpio_pin_mode,
+        cfg.danger_led_pins if cfg.danger_led_pins else [cfg.led_gpio_pin],
+        cfg.buzzer_gpio_pin,
+        bool(cfg.siren_command),
     )
     client = DangerEventClient(
         base_url=cfg.server_base_url,

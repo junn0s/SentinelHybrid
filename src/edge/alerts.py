@@ -10,6 +10,7 @@ class AlertController:
         self,
         led_pin: int,
         led_pins: list[int] | None = None,
+        gpio_pin_mode: str = "BCM",
         buzzer_pin: int | None = None,
         siren_command: str | None = None,
         siren_on_sec: float = 0.15,
@@ -27,44 +28,42 @@ class AlertController:
         self.logger = logging.getLogger(__name__)
         self._leds: list[object] = []
         self._buzzer = None
+        self._jetson_gpio = None
+        self._jetson_led_pins: list[int] = []
+        self._jetson_buzzer_pin: int | None = None
         self._siren_cmd = self._resolve_siren_command(siren_command)
         self._tts_cmd = self._resolve_tts_command(tts_command)
+        self._gpio_pin_mode = (gpio_pin_mode or "BCM").strip().upper()
+        if self._gpio_pin_mode not in {"BCM", "BOARD"}:
+            self.logger.warning("Unknown EDGE_GPIO_PIN_MODE=%s. Falling back to BCM.", self._gpio_pin_mode)
+            self._gpio_pin_mode = "BCM"
+
+        pin_candidates = led_pins if led_pins else [led_pin]
+        unique_pins: list[int] = []
+        for pin in pin_candidates:
+            if pin not in unique_pins:
+                unique_pins.append(pin)
 
         if self.simulate_only:
             self.logger.info("Alert controller in simulate mode.")
             return
 
-        try:
-            from gpiozero import Buzzer, LED  # type: ignore
+        using_gpiozero = False
+        if self._gpio_pin_mode == "BCM":
+            using_gpiozero = self._init_gpiozero(unique_pins=unique_pins, buzzer_pin=buzzer_pin)
+        else:
+            self.logger.info("Pin mode BOARD selected. Using Jetson.GPIO backend.")
 
-            pin_candidates = led_pins if led_pins else [led_pin]
-            unique_pins: list[int] = []
-            for pin in pin_candidates:
-                if pin not in unique_pins:
-                    unique_pins.append(pin)
+        using_jetson_gpio = False
+        if not using_gpiozero:
+            using_jetson_gpio = self._init_jetson_gpio(unique_pins=unique_pins, buzzer_pin=buzzer_pin)
 
-            for pin in unique_pins:
-                self._leds.append(LED(pin))
+        if self._siren_cmd:
+            self.logger.info("Siren command enabled: %s", " ".join(self._siren_cmd))
 
-            if buzzer_pin is not None:
-                self._buzzer = Buzzer(buzzer_pin)
-
-            if self._leds:
-                self.logger.info("GPIO LEDs initialized: pins=%s", unique_pins)
-            if self._buzzer is not None:
-                self.logger.info(
-                    "GPIO buzzer initialized: pin=%s on=%.2fs off=%.2fs",
-                    buzzer_pin,
-                    self.siren_on_sec,
-                    self.siren_off_sec,
-                )
-            if self._siren_cmd:
-                self.logger.info("Siren command enabled: %s", " ".join(self._siren_cmd))
-        except Exception as exc:
-            self.logger.warning("GPIO alert init failed. Fallback to simulate mode: %s", exc)
+        if not using_gpiozero and not using_jetson_gpio and self._siren_cmd is None:
+            self.logger.warning("No hardware alert output initialized. Falling back to simulate mode.")
             self.simulate_only = True
-            self._leds = []
-            self._buzzer = None
 
     def _resolve_tts_command(self, tts_command: str | None) -> list[str] | None:
         if not self.tts_enabled:
@@ -92,6 +91,98 @@ class AlertController:
         self.logger.warning("Configured siren command unavailable: %s", siren_command)
         return None
 
+    def _init_gpiozero(self, unique_pins: list[int], buzzer_pin: int | None) -> bool:
+        try:
+            from gpiozero import Buzzer, LED  # type: ignore
+        except Exception as exc:
+            self.logger.warning("gpiozero unavailable or unsupported: %s", exc)
+            return False
+
+        for pin in unique_pins:
+            try:
+                self._leds.append(LED(pin))
+            except Exception as exc:
+                self.logger.warning("gpiozero LED init failed for pin=%s: %s", pin, exc)
+
+        if buzzer_pin is not None:
+            try:
+                self._buzzer = Buzzer(buzzer_pin)
+            except Exception as exc:
+                self.logger.warning("gpiozero buzzer init failed for pin=%s: %s", buzzer_pin, exc)
+
+        if self._leds:
+            self.logger.info("gpiozero LEDs initialized: pins=%s", unique_pins)
+        if self._buzzer is not None:
+            self.logger.info(
+                "gpiozero buzzer initialized: pin=%s on=%.2fs off=%.2fs",
+                buzzer_pin,
+                self.siren_on_sec,
+                self.siren_off_sec,
+            )
+
+        return bool(self._leds or self._buzzer is not None)
+
+    def _init_jetson_gpio(self, unique_pins: list[int], buzzer_pin: int | None) -> bool:
+        try:
+            import Jetson.GPIO as GPIO  # type: ignore
+        except Exception as exc:
+            self.logger.warning("Jetson.GPIO unavailable: %s", exc)
+            return False
+
+        try:
+            GPIO.setwarnings(False)
+            mode = GPIO.BOARD if self._gpio_pin_mode == "BOARD" else GPIO.BCM
+            GPIO.setmode(mode)
+            board_ground_pins = {6, 9, 14, 20, 25, 30, 34, 39}
+
+            for pin in unique_pins:
+                if self._gpio_pin_mode == "BOARD" and pin in board_ground_pins:
+                    self.logger.warning("Pin %s is GND in BOARD mode. Skipping LED setup.", pin)
+                    continue
+                try:
+                    GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
+                    self._jetson_led_pins.append(pin)
+                except Exception as exc:
+                    self.logger.warning("Jetson GPIO LED init failed for pin=%s: %s", pin, exc)
+
+            if buzzer_pin is not None:
+                if self._gpio_pin_mode == "BOARD" and buzzer_pin in board_ground_pins:
+                    self.logger.warning("Pin %s is GND in BOARD mode. Skipping buzzer setup.", buzzer_pin)
+                else:
+                    try:
+                        GPIO.setup(buzzer_pin, GPIO.OUT, initial=GPIO.LOW)
+                        self._jetson_buzzer_pin = buzzer_pin
+                    except Exception as exc:
+                        self.logger.warning("Jetson GPIO buzzer init failed for pin=%s: %s", buzzer_pin, exc)
+
+            if self._jetson_led_pins:
+                self.logger.info("Jetson GPIO LEDs initialized: pins=%s mode=%s", self._jetson_led_pins, self._gpio_pin_mode)
+            if self._jetson_buzzer_pin is not None:
+                self.logger.info(
+                    "Jetson GPIO buzzer initialized: pin=%s mode=%s on=%.2fs off=%.2fs",
+                    self._jetson_buzzer_pin,
+                    self._gpio_pin_mode,
+                    self.siren_on_sec,
+                    self.siren_off_sec,
+                )
+
+            if self._jetson_led_pins or self._jetson_buzzer_pin is not None:
+                self._jetson_gpio = GPIO
+                return True
+
+            try:
+                GPIO.cleanup()
+            except Exception:
+                pass
+            return False
+        except Exception as exc:
+            self.logger.warning("Jetson GPIO init failed: %s", exc)
+            try:
+                GPIO.cleanup()
+            except Exception:
+                pass
+            return False
+
     def trigger_danger(self, duration_sec: int = 3) -> None:
         self.logger.warning("Danger alert triggered for %ss", duration_sec)
         if self.simulate_only:
@@ -103,25 +194,25 @@ class AlertController:
         end_at = time.monotonic() + max(0, duration_sec)
         self._led_on()
         try:
+            siren_ok = False
             if self._siren_cmd is not None:
-                self._run_siren_command(duration_sec=max(0, duration_sec))
-                return
+                siren_ok = self._run_siren_command(duration_sec=max(0, duration_sec))
 
-            if self._buzzer is None:
-                time.sleep(max(0, duration_sec))
-                return
+            if not siren_ok:
+                if not self._has_buzzer():
+                    time.sleep(max(0, duration_sec))
+                    return
 
-            while time.monotonic() < end_at:
-                self._buzzer.on()
-                time.sleep(self.siren_on_sec)
-                self._buzzer.off()
-                remaining = end_at - time.monotonic()
-                if remaining <= 0:
-                    break
-                time.sleep(min(self.siren_off_sec, remaining))
+                while time.monotonic() < end_at:
+                    self._buzzer_on()
+                    time.sleep(self.siren_on_sec)
+                    self._buzzer_off()
+                    remaining = end_at - time.monotonic()
+                    if remaining <= 0:
+                        break
+                    time.sleep(min(self.siren_off_sec, remaining))
         finally:
-            if self._buzzer is not None:
-                self._buzzer.off()
+            self._buzzer_off()
             self._led_off()
 
     def speak(self, text: str) -> None:
@@ -154,11 +245,18 @@ class AlertController:
             self.logger.warning("TTS playback failed: %s", exc)
 
     def cleanup(self) -> None:
-        if self._buzzer is not None:
-            self._buzzer.off()
+        self._buzzer_off()
         self._led_off()
+        self._cleanup_jetson_gpio()
 
     def _led_on(self) -> None:
+        if self._jetson_gpio is not None:
+            for pin in self._jetson_led_pins:
+                try:
+                    self._jetson_gpio.output(pin, self._jetson_gpio.HIGH)
+                except Exception as exc:
+                    self.logger.warning("Jetson GPIO LED on failed for pin=%s: %s", pin, exc)
+
         for led in self._leds:
             try:
                 led.on()
@@ -166,13 +264,66 @@ class AlertController:
                 self.logger.warning("LED on failed: %s", exc)
 
     def _led_off(self) -> None:
+        if self._jetson_gpio is not None:
+            for pin in self._jetson_led_pins:
+                try:
+                    self._jetson_gpio.output(pin, self._jetson_gpio.LOW)
+                except Exception as exc:
+                    self.logger.warning("Jetson GPIO LED off failed for pin=%s: %s", pin, exc)
+
         for led in self._leds:
             try:
                 led.off()
             except Exception as exc:
                 self.logger.warning("LED off failed: %s", exc)
 
-    def _run_siren_command(self, duration_sec: float) -> None:
+    def _has_buzzer(self) -> bool:
+        return self._buzzer is not None or (self._jetson_gpio is not None and self._jetson_buzzer_pin is not None)
+
+    def _buzzer_on(self) -> None:
+        if self._buzzer is not None:
+            try:
+                self._buzzer.on()
+            except Exception as exc:
+                self.logger.warning("Buzzer on failed: %s", exc)
+        if self._jetson_gpio is not None and self._jetson_buzzer_pin is not None:
+            try:
+                self._jetson_gpio.output(self._jetson_buzzer_pin, self._jetson_gpio.HIGH)
+            except Exception as exc:
+                self.logger.warning("Jetson GPIO buzzer on failed for pin=%s: %s", self._jetson_buzzer_pin, exc)
+
+    def _buzzer_off(self) -> None:
+        if self._buzzer is not None:
+            try:
+                self._buzzer.off()
+            except Exception as exc:
+                self.logger.warning("Buzzer off failed: %s", exc)
+        if self._jetson_gpio is not None and self._jetson_buzzer_pin is not None:
+            try:
+                self._jetson_gpio.output(self._jetson_buzzer_pin, self._jetson_gpio.LOW)
+            except Exception as exc:
+                self.logger.warning("Jetson GPIO buzzer off failed for pin=%s: %s", self._jetson_buzzer_pin, exc)
+
+    def _cleanup_jetson_gpio(self) -> None:
+        if self._jetson_gpio is None:
+            return
+        pins: list[int] = []
+        pins.extend(self._jetson_led_pins)
+        if self._jetson_buzzer_pin is not None and self._jetson_buzzer_pin not in pins:
+            pins.append(self._jetson_buzzer_pin)
+        try:
+            if pins:
+                self._jetson_gpio.cleanup(pins)
+            else:
+                self._jetson_gpio.cleanup()
+        except Exception as exc:
+            self.logger.warning("Jetson GPIO cleanup failed: %s", exc)
+        finally:
+            self._jetson_gpio = None
+            self._jetson_led_pins = []
+            self._jetson_buzzer_pin = None
+
+    def _run_siren_command(self, duration_sec: float) -> bool:
         proc = None
         try:
             proc = subprocess.Popen(
@@ -180,15 +331,28 @@ class AlertController:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
-            time.sleep(duration_sec)
+            probe = min(0.2, max(0, duration_sec))
+            if probe > 0:
+                time.sleep(probe)
+            rc = proc.poll()
+            if rc is not None and rc != 0:
+                self.logger.warning("Siren command exited early with code=%s", rc)
+                return False
+
+            remaining = max(0, duration_sec - probe)
+            if remaining > 0:
+                time.sleep(remaining)
+            return True
         except Exception as exc:
             self.logger.warning("Siren command failed: %s", exc)
+            return False
         finally:
             if proc is None:
                 return
             try:
-                proc.terminate()
-                proc.wait(timeout=0.8)
+                if proc.poll() is None:
+                    proc.terminate()
+                    proc.wait(timeout=0.8)
             except Exception:
                 try:
                     proc.kill()
