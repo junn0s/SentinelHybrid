@@ -45,6 +45,8 @@ def run() -> None:
         simulate_only=cfg.simulate_alert_only,
         tts_enabled=cfg.tts_enabled,
         tts_command=cfg.tts_command,
+        tts_piper_model=cfg.tts_piper_model,
+        tts_piper_speaker_id=cfg.tts_piper_speaker_id,
         tts_timeout_sec=cfg.tts_timeout_sec,
     )
     logger.info(
