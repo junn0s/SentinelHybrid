@@ -35,6 +35,11 @@ def run() -> None:
 
     alerts = AlertController(
         led_pin=cfg.led_gpio_pin,
+        led_pins=cfg.danger_led_pins,
+        buzzer_pin=cfg.buzzer_gpio_pin,
+        siren_command=cfg.siren_command,
+        siren_on_sec=cfg.siren_on_sec,
+        siren_off_sec=cfg.siren_off_sec,
         simulate_only=cfg.simulate_alert_only,
         tts_enabled=cfg.tts_enabled,
         tts_command=cfg.tts_command,
@@ -53,6 +58,8 @@ def run() -> None:
         timeout_sec=cfg.vlm_timeout_sec,
         keep_alive=cfg.vlm_keep_alive,
         use_heuristic_fallback=cfg.vlm_use_heuristic_fallback,
+        raw_log_enabled=cfg.vlm_raw_log_enabled,
+        raw_log_path=cfg.vlm_raw_log_path,
     )
 
     cap = cv2.VideoCapture(cfg.camera_index)

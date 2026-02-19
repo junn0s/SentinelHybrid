@@ -48,9 +48,9 @@ def discord_send_alert(text: str, event_id: str = "", severity: str = "danger") 
     except Exception as exc:
         return ToolResult(status="error", reason=f"requests import failed: {exc}").model_dump(mode="json")
 
-    payload = {"text": req.text}
+    payload = {"content": req.text}
     if req.event_id:
-        payload["text"] = f"{req.text}\n(event_id={req.event_id}, severity={req.severity})"
+        payload["content"] = f"{req.text}\n(event_id={req.event_id}, severity={req.severity})"
 
     try:
         response = requests.post(
