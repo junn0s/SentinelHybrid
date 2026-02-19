@@ -1,5 +1,8 @@
 import base64
+import json
 import logging
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import cv2
@@ -16,6 +19,8 @@ class VLMClient:
         timeout_sec: int = 20,
         keep_alive: str = "10m",
         use_heuristic_fallback: bool = True,
+        raw_log_enabled: bool = True,
+        raw_log_path: str = "data/edge/vlm_raw_responses.jsonl",
     ) -> None:
         self.provider = provider
         self.model = model
@@ -23,6 +28,8 @@ class VLMClient:
         self.timeout_sec = timeout_sec
         self.keep_alive = keep_alive
         self.use_heuristic_fallback = use_heuristic_fallback
+        self.raw_log_enabled = raw_log_enabled
+        self.raw_log_path = Path(raw_log_path)
         self.logger = logging.getLogger(__name__)
         self.session = requests.Session()
 
@@ -32,12 +39,33 @@ class VLMClient:
                 return self._analyze_with_ollama(frame)
             except Exception as exc:
                 self.logger.warning("Ollama VLM call failed. fallback=%s error=%s", self.use_heuristic_fallback, exc)
+                self._write_raw_log(
+                    {
+                        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+                        "status": "ollama-error",
+                        "provider": self.provider,
+                        "model": self.model,
+                        "error": str(exc),
+                    }
+                )
         else:
             self.logger.warning("Unsupported EDGE_VLM_PROVIDER=%s", self.provider)
 
         if self.use_heuristic_fallback:
             is_danger, summary, confidence, meta = self._analyze_with_heuristic(frame)
             meta["fallback_reason"] = "vlm_call_failed_or_unsupported_provider"
+            self._write_raw_log(
+                {
+                    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+                    "status": "heuristic-fallback",
+                    "provider": self.provider,
+                    "model": self.model,
+                    "is_danger": is_danger,
+                    "summary": summary,
+                    "confidence": confidence,
+                    "meta": meta,
+                }
+            )
             return is_danger, summary, confidence, meta
 
         raise RuntimeError("VLM analysis failed and heuristic fallback is disabled.")
@@ -60,9 +88,11 @@ class VLMClient:
         confidence = 0.93 if is_danger else 0.88
         summary = "특이 위험 상황은 감지되지 않았습니다."
         summary_source = "safe-default"
+        summary_raw = ""
+        summary_meta: dict[str, Any] = {}
 
         if is_danger:
-            summary_raw, _summary_meta = self._call_ollama(
+            summary_raw, summary_meta = self._call_ollama(
                 prompt=(
                     "위험 상황이다. "
                     "현장 작업자에게 즉시 필요한 행동만 한국어 한 문장(40자 내외, 명령형)으로 작성하라."
@@ -85,6 +115,22 @@ class VLMClient:
             "request_eval_count": classify_meta.get("eval_count"),
             "request_total_duration_ns": classify_meta.get("total_duration"),
         }
+        self._write_raw_log(
+            {
+                "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+                "status": "ok",
+                "provider": "ollama",
+                "model": self.model,
+                "classification": label,
+                "classification_raw": (classify_raw or "").strip(),
+                "classification_response": classify_meta,
+                "summary_raw": (summary_raw or "").strip(),
+                "summary_response": summary_meta,
+                "summary_used": summary,
+                "confidence": confidence,
+                "summary_source": summary_source,
+            }
+        )
         return is_danger, summary, confidence, meta
 
     def _call_ollama(self, prompt: str, image_base64: str) -> tuple[str, dict[str, Any]]:
@@ -173,3 +219,14 @@ class VLMClient:
             "mean_red": round(red, 2),
         }
         return is_danger, summary, confidence, meta
+
+    def _write_raw_log(self, payload: dict[str, Any]) -> None:
+        if not self.raw_log_enabled:
+            return
+
+        try:
+            self.raw_log_path.parent.mkdir(parents=True, exist_ok=True)
+            with self.raw_log_path.open("a", encoding="utf-8") as fp:
+                fp.write(json.dumps(payload, ensure_ascii=False) + "\n")
+        except Exception as exc:
+            self.logger.warning("Failed to write VLM raw log: %s", exc)
