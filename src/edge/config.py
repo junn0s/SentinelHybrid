@@ -10,6 +10,12 @@ class EdgeConfig:
     server_base_url: str = "http://127.0.0.1:8000"
     danger_endpoint: str = "/events/danger"
     source_id: str = "jetson-orin-nano-01"
+    vlm_provider: str = "ollama"
+    vlm_model: str = "gemma3:4b"
+    vlm_ollama_url: str = "http://127.0.0.1:11434/api/chat"
+    vlm_timeout_sec: int = 20
+    vlm_keep_alive: str = "10m"
+    vlm_use_heuristic_fallback: bool = True
     request_timeout_sec: int = 5
     request_retries: int = 2
     alert_duration_sec: int = 3
@@ -30,6 +36,12 @@ class EdgeConfig:
             server_base_url=os.getenv("EDGE_SERVER_BASE_URL", "http://127.0.0.1:8000"),
             danger_endpoint=os.getenv("EDGE_DANGER_ENDPOINT", "/events/danger"),
             source_id=os.getenv("EDGE_SOURCE_ID", "jetson-orin-nano-01"),
+            vlm_provider=os.getenv("EDGE_VLM_PROVIDER", "ollama").strip().lower(),
+            vlm_model=os.getenv("EDGE_VLM_MODEL", "gemma3:4b").strip(),
+            vlm_ollama_url=os.getenv("EDGE_VLM_OLLAMA_URL", "http://127.0.0.1:11434/api/chat").strip(),
+            vlm_timeout_sec=int(os.getenv("EDGE_VLM_TIMEOUT_SEC", "20")),
+            vlm_keep_alive=os.getenv("EDGE_VLM_KEEP_ALIVE", "10m").strip(),
+            vlm_use_heuristic_fallback=os.getenv("EDGE_VLM_HEURISTIC_FALLBACK", "true").lower() == "true",
             request_timeout_sec=int(os.getenv("EDGE_REQUEST_TIMEOUT_SEC", "5")),
             request_retries=int(os.getenv("EDGE_REQUEST_RETRIES", "2")),
             alert_duration_sec=int(os.getenv("EDGE_ALERT_DURATION_SEC", "3")),

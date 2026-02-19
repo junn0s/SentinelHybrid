@@ -24,7 +24,7 @@ SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합�
 
 - 현장 경고: LED 점멸, 사이렌, 안내 음성
 - 서버 대응: 상황 해석, RAG 기반 매뉴얼 생성
-- 운영 연계: 로그 저장, Slack 전파, 추후 분석
+- 운영 연계: 실시간 알림 전파(Discord), 추후 분석
 
 즉, "위험을 찾는 시스템"이 아니라 "**위험에 대응하는 시스템**"을 목표로 합니다.
 
@@ -49,7 +49,7 @@ SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합�
 5. 서버는 Gemini + MCP + RAG를 통해 상황별 대응 매뉴얼을 생성합니다.
 6. 생성된 매뉴얼은 Jetson으로 다시 전달됩니다.
 7. Jetson은 스피커를 통해 대응 문장을 음성으로 안내합니다.
-8. 서버는 동일 이벤트를 Supabase에 기록하고 Slack으로 전파합니다.
+8. 서버는 동일 이벤트를 운영 채널(Discord)로 전파합니다.
 
 ---
 
@@ -62,7 +62,7 @@ SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합�
 ### Cloud (FastAPI + RAG) 역할
 - 상황 맥락 기반 판단 고도화
 - 매뉴얼/정책/히스토리 기반 대응 지시 생성
-- 운영 시스템(Slack, 로그 저장소)과 연동
+- 운영 시스템(Discord 알림 채널)과 연동
 
 ### 결론
 - **속도는 Edge**, **지식과 확장성은 Cloud**에서 담당
@@ -82,8 +82,7 @@ SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합�
 | **Orchestration** | ![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=flat-square&logo=langchain&logoColor=white) | Agent orchestration |
 | **Context Protocol** | ![MCP](https://img.shields.io/badge/MCP-000000?style=flat-square) | Model Context Protocol |
 | **RAG** | ![Chroma](https://img.shields.io/badge/Chroma-FFB000?style=flat-square) ![Pinecone](https://img.shields.io/badge/Pinecone-1E90FF?style=flat-square) | Vector DB (MCP) |
-| **Logging** | ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white) | Logging/DB (MCP) |
-| **Alerting** | ![Slack MCP](https://img.shields.io/badge/Slack%20MCP-4A154B?style=flat-square&logo=slack&logoColor=white) | Real-time alerting(MCP) |
+| **Alerting** | ![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat-square&logo=discord&logoColor=white) | Real-time alerting(MCP) |
 | **Local Response** | `LED` `Siren` `TTS Speaker` | Local actuators (GPIO/USB Audio) |
 
 ---
@@ -93,8 +92,7 @@ SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합�
 SentinelHybrid는 MCP를 통해 외부 도구를 "호출 가능한 컨텍스트"로 표준화해 연결합니다.
 
 - **RAG MCP**: 상황 문맥에 맞는 대응 절차 검색/요약
-- **Supabase MCP**: 사건 로그 저장, 이력 조회, 사후 분석 데이터 축적
-- **Slack MCP**: 관리자/운영 채널에 실시간 전파 및 협업 대응
+- **Discord MCP**: 관리자/운영 채널에 실시간 전파 및 협업 대응
 
 이 구조를 사용하면 도구를 교체하거나 추가할 때도 핵심 파이프라인 변경을 최소화할 수 있습니다.
 
@@ -129,7 +127,7 @@ SentinelHybrid/
 uv sync
 
 # 2) 환경 변수 파일 준비 (.env)
-cp .env.example .env
+# 팀 표준 키 목록에 맞춰 .env 직접 작성
 
 # 3) Edge 파이프라인 실행 (Jetson)
 python -m src.edge.main
@@ -179,8 +177,8 @@ gantt
     RAG 검색 및 매뉴얼 생성 품질 개선              :active, c3, after c2, 2d
 
     section Ops Integration
-    Supabase 로그 스키마/적재                       :active, d1, after c3, 3d
-    Slack 알림 템플릿/심각도 정책                   :active, d2, after d1, 2d
+    Discord 알림 템플릿/심각도 정책                 :active, d1, after c3, 3d
+    운영 대시보드/알림 연계 점검                     :active, d2, after d1, 2d
     End-to-End 통합 테스트                           :active, d3, after d2, 2d
 
     section Validation & Release
