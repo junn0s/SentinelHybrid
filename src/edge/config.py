@@ -23,6 +23,7 @@ class EdgeConfig:
     alert_duration_sec: int = 3
     led_gpio_pin: int = 17
     danger_led_pins: list[int] | None = None
+    safe_led_pins: list[int] | None = None
     gpio_pin_mode: str = "BCM"
     buzzer_gpio_pin: int | None = None
     siren_command: str | None = None
@@ -39,6 +40,8 @@ class EdgeConfig:
     def from_env(cls) -> "EdgeConfig":
         led_pin_items = [item.strip() for item in os.getenv("EDGE_DANGER_LED_PINS", "").split(",") if item.strip()]
         parsed_led_pins = [int(item) for item in led_pin_items] if led_pin_items else None
+        safe_led_pin_items = [item.strip() for item in os.getenv("EDGE_SAFE_LED_PINS", "").split(",") if item.strip()]
+        parsed_safe_led_pins = [int(item) for item in safe_led_pin_items] if safe_led_pin_items else None
         buzzer_pin_raw = (os.getenv("EDGE_BUZZER_GPIO_PIN", "") or "").strip()
         parsed_buzzer_pin = int(buzzer_pin_raw) if buzzer_pin_raw else None
 
@@ -62,6 +65,7 @@ class EdgeConfig:
             alert_duration_sec=int(os.getenv("EDGE_ALERT_DURATION_SEC", "3")),
             led_gpio_pin=int(os.getenv("EDGE_LED_GPIO_PIN", "17")),
             danger_led_pins=parsed_led_pins,
+            safe_led_pins=parsed_safe_led_pins,
             gpio_pin_mode=(os.getenv("EDGE_GPIO_PIN_MODE", "BCM") or "BCM").strip().upper(),
             buzzer_gpio_pin=parsed_buzzer_pin,
             siren_command=(os.getenv("EDGE_SIREN_COMMAND") or "").strip() or None,

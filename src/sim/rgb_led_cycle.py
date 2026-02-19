@@ -3,9 +3,11 @@ import time
 import Jetson.GPIO as GPIO
 
 # BOARD pin numbering (physical header pin numbers)
-LED_R = 16
-LED_G = 18
-LED_B = 22
+# Observed channel wiring on current device:
+# 16 -> G, 18 -> B, 22 -> R
+LED_R = 22
+LED_G = 16
+LED_B = 18
 
 
 def setup() -> None:
