@@ -1,3 +1,5 @@
+import base64
+import binascii
 import logging
 import signal
 import time
@@ -26,6 +28,21 @@ def _extract_tts_summary(ack: dict) -> str:
         if isinstance(text, str):
             return text.strip()
     return ""
+
+def _extract_tts_wav_bytes(ack: dict) -> bytes | None:
+    response = ack.get("response")
+    if not isinstance(response, dict):
+        return None
+    encoded = response.get("jetson_tts_wav_base64")
+    if not isinstance(encoded, str) or not encoded.strip():
+        return None
+    try:
+        return base64.b64decode(encoded, validate=True)
+    except (binascii.Error, ValueError):
+        try:
+            return base64.b64decode(encoded)
+        except Exception:
+            return None
 
 
 def run() -> None:
@@ -138,6 +155,12 @@ def run() -> None:
                 if cfg.tts_use_event_summary_fallback:
                     alerts.speak(summary)
                 continue
+
+            server_wav = _extract_tts_wav_bytes(ack)
+            if server_wav:
+                if alerts.play_wav_bytes(server_wav):
+                    continue
+                logger.warning("Server WAV playback failed. Falling back to text TTS. event_id=%s", event_id)
 
             tts_summary = _extract_tts_summary(ack)
             if not tts_summary and cfg.tts_use_event_summary_fallback:

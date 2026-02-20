@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from src.api.config import ApiConfig
 from src.api.models import DangerEvent, DangerEventAck, DangerResponse
 from src.api.services.llm_responder import LLMResponder
+from src.api.services.gemini_tts import GeminiTTSGenerator
 from src.api.services.local_rag import LocalRAGRetriever
 from src.api.services.mcp_ops import MCPOperationsPublisher
 from src.api.services.mcp_rag import MCPRAGRetriever
@@ -31,6 +32,7 @@ PIPELINE = DangerProcessingPipeline(
     mcp_retriever=MCPRAGRetriever(CONFIG),
     local_retriever=LocalRAGRetriever(top_k=CONFIG.rag_top_k),
     responder=LLMResponder(CONFIG),
+    tts_generator=GeminiTTSGenerator(CONFIG),
     mcp_timeout_sec=CONFIG.rag_mcp_timeout_sec,
 )
 OPS_PUBLISHER = MCPOperationsPublisher(CONFIG)
@@ -104,7 +106,8 @@ async def receive_danger_event(event: DangerEvent) -> DangerEventAck:
     response: DangerResponse = await PIPELINE.process(event)
     ops_result = await OPS_PUBLISHER.publish(event=event, response=response)
     LOGGER.info("MCP ops publish result. event_id=%s result=%s", event.event_id, ops_result)
-    response_payload = response.model_dump(mode="json")
+    # Do not persist large inline WAV payloads in logs or admin polling responses.
+    response_payload = response.model_dump(mode="json", exclude={"jetson_tts_wav_base64"})
     _append_jsonl(RESPONSE_LOG_PATH, response_payload)
     _push_recent(RECENT_RESPONSES, response_payload)
     RESPONSES_BY_EVENT_ID[event.event_id] = response_payload

@@ -51,6 +51,13 @@ class ApiConfig:
     llm_provider: str = "gemini"
     gemini_model: str = "gemini-3-flash-preview"
     google_api_key: str | None = None
+    gemini_tts_enabled: bool = True
+    gemini_tts_model: str = "gemini-2.5-flash-preview-tts"
+    gemini_tts_voice: str = "Kore"
+    gemini_tts_style_prompt: str | None = None
+    gemini_tts_rate_hz: int = 24000
+    gemini_tts_channels: int = 1
+    gemini_tts_sample_width: int = 2
 
     @classmethod
     def from_env(cls) -> "ApiConfig":
@@ -108,4 +115,11 @@ class ApiConfig:
             llm_provider=os.getenv("LLM_PROVIDER", "gemini"),
             gemini_model=os.getenv("GEMINI_MODEL", "gemini-3-flash-preview"),
             google_api_key=os.getenv("GOOGLE_API_KEY"),
+            gemini_tts_enabled=os.getenv("GEMINI_TTS_ENABLED", "true").lower() == "true",
+            gemini_tts_model=os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
+            gemini_tts_voice=os.getenv("GEMINI_TTS_VOICE", "Kore"),
+            gemini_tts_style_prompt=(os.getenv("GEMINI_TTS_STYLE_PROMPT") or "").strip() or None,
+            gemini_tts_rate_hz=int(os.getenv("GEMINI_TTS_RATE_HZ", "24000")),
+            gemini_tts_channels=int(os.getenv("GEMINI_TTS_CHANNELS", "1")),
+            gemini_tts_sample_width=int(os.getenv("GEMINI_TTS_SAMPLE_WIDTH", "2")),
         )

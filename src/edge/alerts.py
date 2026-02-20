@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 import shlex
 import shutil
@@ -111,7 +112,16 @@ class AlertController:
             if tokens and shutil.which(tokens[0]):
                 return tokens
             self.logger.warning("Configured TTS command unavailable: %s", tts_command)
-            return None
+
+        gemini_helper = Path(__file__).resolve().parents[2] / "scripts" / "tts_gemini.py"
+        gemini_api_key = ((os.getenv("GOOGLE_API_KEY") or "").strip() or (os.getenv("GEMINI_API_KEY") or "").strip())
+        if (
+            gemini_helper.exists()
+            and os.access(gemini_helper, os.X_OK)
+            and gemini_api_key
+        ):
+            self.logger.info("Using Gemini TTS helper: %s", gemini_helper)
+            return [str(gemini_helper)]
 
         # Prefer local neural TTS via Piper when model path + runtime are available.
         if self._can_use_piper():
@@ -314,13 +324,63 @@ class AlertController:
                 cmd,
                 timeout=self.tts_timeout_sec,
                 check=False,
+                capture_output=True,
+                text=True,
+            )
+            if completed.returncode != 0:
+                details = (completed.stderr or completed.stdout or "").strip()
+                if details:
+                    details = " ".join(details.split())[:240]
+                    self.logger.warning(
+                        "TTS command returned non-zero code=%s detail=%s",
+                        completed.returncode,
+                        details,
+                    )
+                else:
+                    self.logger.warning("TTS command returned non-zero code=%s", completed.returncode)
+        except subprocess.TimeoutExpired:
+            self.logger.warning("TTS command timed out after %ss", self.tts_timeout_sec)
+        except Exception as exc:
+            self.logger.warning("TTS playback failed: %s", exc)
+
+    def play_wav_bytes(self, wav_bytes: bytes) -> bool:
+        if not self.tts_enabled:
+            return False
+        if not wav_bytes:
+            return False
+        if self.simulate_only:
+            self.logger.warning("[SIM] TTS WAV received. bytes=%s", len(wav_bytes))
+            return True
+        if not shutil.which("ffplay"):
+            self.logger.warning("ffplay not installed. Cannot play server WAV audio.")
+            return False
+
+        audio_path = None
+        try:
+            with tempfile.NamedTemporaryFile(prefix="server_tts_", suffix=".wav", delete=False) as tmp:
+                audio_path = tmp.name
+                tmp.write(wav_bytes)
+
+            play_run = subprocess.run(
+                ["ffplay", "-nodisp", "-autoexit", audio_path],
+                timeout=max(20, self.tts_timeout_sec + 12),
+                check=False,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
-            if completed.returncode != 0:
-                self.logger.warning("TTS command returned non-zero code=%s", completed.returncode)
+            if play_run.returncode != 0:
+                self.logger.warning("ffplay returned non-zero code=%s while playing server WAV", play_run.returncode)
+                return False
+            return True
         except Exception as exc:
-            self.logger.warning("TTS playback failed: %s", exc)
+            self.logger.warning("Server WAV playback failed: %s", exc)
+            return False
+        finally:
+            if audio_path:
+                try:
+                    Path(audio_path).unlink(missing_ok=True)
+                except Exception:
+                    pass
 
     def _can_use_piper(self) -> bool:
         if not shutil.which("piper"):

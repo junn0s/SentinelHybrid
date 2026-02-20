@@ -1,6 +1,7 @@
 import asyncio
 
 from src.api.models import DangerEvent, DangerResponse
+from src.api.services.gemini_tts import GeminiTTSGenerator
 from src.api.services.llm_responder import LLMResponder
 from src.api.services.local_rag import LocalRAGRetriever
 from src.api.services.mcp_rag import MCPRAGRetriever
@@ -19,11 +20,13 @@ class DangerProcessingPipeline:
         mcp_retriever: MCPRAGRetriever,
         local_retriever: LocalRAGRetriever,
         responder: LLMResponder,
+        tts_generator: GeminiTTSGenerator,
         mcp_timeout_sec: float = 2.0,
     ) -> None:
         self.mcp_retriever = mcp_retriever
         self.local_retriever = local_retriever
         self.responder = responder
+        self.tts_generator = tts_generator
         self.mcp_timeout_sec = mcp_timeout_sec
 
     def _infer_hazard_hint(self, event: DangerEvent) -> str:
@@ -103,6 +106,7 @@ class DangerProcessingPipeline:
             references=refs,
             hazard_hint=hazard_hint,
         )
+        jetson_tts_wav_base64 = await self.tts_generator.synthesize_wav_base64(jetson_summary)
 
         return DangerResponse(
             event_id=event.event_id,
@@ -110,5 +114,6 @@ class DangerProcessingPipeline:
             llm_provider=self.responder.provider_name,
             operator_response=operator_response,
             jetson_tts_summary=jetson_summary,
+            jetson_tts_wav_base64=jetson_tts_wav_base64,
             references=refs,
         )

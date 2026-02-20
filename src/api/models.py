@@ -27,6 +27,7 @@ class DangerResponse(BaseModel):
     llm_provider: str
     operator_response: str
     jetson_tts_summary: str
+    jetson_tts_wav_base64: str | None = None
     references: list[RAGReference] = Field(default_factory=list)
 
 
