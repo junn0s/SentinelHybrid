@@ -4,121 +4,113 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SentinelHybrid Control Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
     <link rel="stylesheet" href="/admin/static/styles.css" />
   </head>
   <body>
-    <div class="bg-layer"></div>
-    <div class="grain-layer"></div>
-
-    <main class="app-shell">
-      <header class="topbar card reveal">
-        <div>
-          <p class="eyebrow">SentinelHybrid</p>
-          <h1>Safety Control Center</h1>
-          <p class="subtitle">Edge + Cloud 위험 대응 관리자 대시보드</p>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="logo">
+          <div class="logo-icon"></div>
+          SentinelHybrid
         </div>
-        <div class="topbar-meta">
-          <div class="badge" id="server-status-badge">
-            <span class="dot" id="server-status-dot"></span>
-            <span id="server-status-text">Connecting...</span>
-          </div>
-          <div class="badge">
-            <span>Model</span>
-            <strong id="model-text">-</strong>
-          </div>
-          <button id="refresh-button" class="btn">지금 새로고침</button>
+        <nav class="nav-menu">
+          <a href="#" class="active">Overview</a>
+          <a href="#">Transactions</a>
+          <a href="#">Customers</a>
+          <a href="#">Reports</a>
+          <a href="#">Settings</a>
+        </nav>
+        <div class="logout">
+          <a href="#">Log out</a>
         </div>
-      </header>
+      </aside>
 
-      <section class="metric-grid reveal">
-        <article class="card metric" style="--metric-accent: var(--cyan)">
-          <p class="metric-label">총 이벤트</p>
-          <p class="metric-value" id="metric-events">0</p>
-        </article>
-        <article class="card metric" style="--metric-accent: var(--blue)">
-          <p class="metric-label">응답 완료</p>
-          <p class="metric-value" id="metric-responses">0</p>
-        </article>
-        <article class="card metric" style="--metric-accent: var(--amber)">
-          <p class="metric-label">MCP 사용 비율</p>
-          <p class="metric-value" id="metric-mcp-rate">0%</p>
-        </article>
-        <article class="card metric" style="--metric-accent: var(--danger)">
-          <p class="metric-label">평균 신뢰도</p>
-          <p class="metric-value" id="metric-confidence">0.00</p>
-        </article>
-      </section>
+      <main class="main-content">
+        <header class="topbar">
+          <h1>Dashboard</h1>
+          <div class="topbar-right">
+            <div class="badge" id="server-status-badge">
+              <span class="dot" id="server-status-dot"></span>
+              <span id="server-status-text">Connecting...</span>
+            </div>
+            <div class="badge">
+              <span>Model</span>
+              <strong id="model-text">-</strong>
+            </div>
+            <button id="refresh-button" class="btn">Refresh</button>
+          </div>
+        </header>
 
-      <section class="content-grid reveal">
-        <article class="card panel panel-events">
-          <div class="panel-header">
-            <div>
+        <section class="metric-grid">
+          <article class="metric-card card-1">
+            <p>총 이벤트</p>
+            <h2 id="metric-events">0</h2>
+          </article>
+          <article class="metric-card card-2">
+            <p>응답 완료</p>
+            <h2 id="metric-responses">0</h2>
+          </article>
+          <article class="metric-card card-3">
+            <p>MCP 사용 비율</p>
+            <h2 id="metric-mcp-rate">0%</h2>
+          </article>
+          <article class="metric-card card-4">
+            <p>평균 신뢰도</p>
+            <h2 id="metric-confidence">0.00</h2>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="card panel panel-events">
+            <div class="panel-header">
               <h2>Recent Danger Events</h2>
               <p id="events-meta">0건</p>
             </div>
-            <div class="polling">
-              <span class="dot pulse"></span>
-              <span id="polling-text">Auto refresh: ON (3s)</span>
+            <div class="event-list-wrap">
+              <table class="event-table">
+                <thead>
+                  <tr>
+                    <th>시간</th>
+                    <th>소스</th>
+                    <th>요약</th>
+                    <th>RAG</th>
+                  </tr>
+                </thead>
+                <tbody id="event-tbody">
+                  <tr>
+                    <td colspan="4" class="empty-row">이벤트를 기다리는 중입니다.</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
-          <div class="event-list-wrap">
-            <table class="event-table">
-              <thead>
-                <tr>
-                  <th>시간</th>
-                  <th>소스</th>
-                  <th>요약</th>
-                  <th>RAG</th>
-                </tr>
-              </thead>
-              <tbody id="event-tbody">
-                <tr>
-                  <td colspan="4" class="empty-row">이벤트를 기다리는 중입니다.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </article>
+          </article>
 
-        <article class="card panel panel-detail">
-          <div class="panel-header">
-            <div>
+          <article class="card panel panel-detail">
+            <div class="panel-header">
               <h2>Event Response Detail</h2>
-              <p id="detail-event-id">선택된 이벤트 없음</p>
+              <span class="tag" id="detail-rag-source">-</span>
             </div>
-            <span class="badge strong" id="detail-rag-source">-</span>
-          </div>
-
-          <div class="detail-block">
-            <h3>상황 요약</h3>
-            <p id="detail-summary">왼쪽 이벤트를 선택하면 상세가 표시됩니다.</p>
-          </div>
-
-          <div class="detail-block">
-            <h3>운영자 대응 문장</h3>
-            <p id="detail-operator">-</p>
-          </div>
-
-          <div class="detail-block">
-            <h3>Jetson TTS</h3>
-            <p class="tts" id="detail-tts">-</p>
-          </div>
-
-          <div class="detail-block">
-            <h3>참고 매뉴얼</h3>
-            <ul id="detail-references" class="reference-list">
-              <li class="reference-empty">참고 매뉴얼 없음</li>
-            </ul>
-          </div>
-        </article>
-      </section>
-    </main>
+            <div class="detail-block">
+              <p id="detail-event-id" style="font-size:12px; color:var(--c-blue); margin-bottom: 12px;">-</p>
+              
+              <h3>상황 요약</h3>
+              <p id="detail-summary">왼쪽 이벤트를 선택하면 상세가 표시됩니다.</p>
+              
+              <h3>운영자 대응 문장</h3>
+              <p id="detail-operator">-</p>
+              
+              <h3>Jetson TTS</h3>
+              <p class="tts" id="detail-tts">-</p>
+              
+              <h3>참고 매뉴얼</h3>
+              <ul id="detail-references" class="reference-list">
+                <li class="reference-empty">참고 매뉴얼 없음</li>
+              </ul>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
 
     <script src="/admin/static/app.js" defer></script>
   </body>

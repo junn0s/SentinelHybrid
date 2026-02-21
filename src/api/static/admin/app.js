@@ -100,7 +100,7 @@ function renderEventRows() {
           <td>${formatTime(event.timestamp)}</td>
           <td>${safeText(event.source)}</td>
           <td class="summary-cell">${safeText(event.summary)}</td>
-          <td class="rag-cell"><span class="tag ${ragClass}">${safeText(rag)}</span></td>
+          <td><span class="tag ${ragClass}">${safeText(rag)}</span></td>
         </tr>
       `;
     })
@@ -152,7 +152,11 @@ function renderDetailPanel() {
   els.detailSummary.textContent = safeText(selected.summary);
   els.detailOperator.textContent = safeText(response?.operator_response, "응답 생성 대기 중");
   els.detailTts.textContent = safeText(response?.jetson_tts_summary, "-");
-  els.detailRagSource.textContent = safeText(response?.rag_source, "pending");
+  
+  const ragSource = response?.rag_source || "pending";
+  els.detailRagSource.textContent = ragSource;
+  els.detailRagSource.className = `tag ${ragSource === "mcp" ? "mcp" : ragSource === "local-fallback" ? "fallback" : ""}`;
+
   renderReferences(response?.references ?? []);
 }
 
@@ -167,9 +171,7 @@ async function loadSingleResponseIfNeeded(eventId) {
       renderEventRows();
       renderDetailPanel();
     }
-  } catch (_) {
-    // Ignore network noise for detail lazy-load.
-  }
+  } catch (_) {}
 }
 
 async function loadHealth() {
