@@ -1,16 +1,24 @@
 import logging
-import json
 from typing import Any
 
 from src.api.config import ApiConfig
 from src.api.models import RAGReference
+from src.api.services.mcp_base import MCPToolClient, normalize_mcp_result
 
 
 class MCPRAGRetriever:
     def __init__(self, config: ApiConfig) -> None:
         self.config = config
         self.logger = logging.getLogger(__name__)
-        self._client = None
+        self._tool_client = MCPToolClient(
+            server_alias="rag",
+            transport=self.config.rag_mcp_transport,
+            url=self.config.rag_mcp_url,
+            command=self.config.rag_mcp_command,
+            args=self.config.rag_mcp_args or ["-m", "src.mcp.rag_server"],
+            logger=self.logger,
+            import_log_message="langchain-mcp-adapters unavailable",
+        )
         self._tool = None
 
     async def _get_tool(self):
@@ -18,43 +26,16 @@ class MCPRAGRetriever:
             return self._tool
 
         try:
-            from langchain_mcp_adapters.client import MultiServerMCPClient
-        except Exception as exc:  # pragma: no cover
-            self.logger.warning("langchain-mcp-adapters unavailable: %s", exc)
-            return None
-
-        server_cfg: dict[str, Any]
-        if self.config.rag_mcp_transport == "streamable_http" and self.config.rag_mcp_url:
-            server_cfg = {
-                "transport": "streamable_http",
-                "url": self.config.rag_mcp_url,
-            }
-        else:
-            server_cfg = {
-                "transport": "stdio",
-                "command": self.config.rag_mcp_command,
-                "args": self.config.rag_mcp_args or ["-m", "src.mcp.rag_server"],
-            }
-
-        try:
-            self._client = MultiServerMCPClient({"rag": server_cfg})
-            tools = await self._client.get_tools()
-            if not tools:
-                return None
-
-            selected = None
-            for tool in tools:
-                if tool.name == self.config.rag_mcp_tool_name:
-                    selected = tool
-                    break
+            selected = await self._tool_client.get_tool(
+                tool_name=self.config.rag_mcp_tool_name,
+                fallback_first=True,
+            )
             if selected is None:
-                selected = tools[0]
-
+                return None
             self._tool = selected
             return self._tool
         except Exception as exc:
             self.logger.warning("MCP tool init failed: %s", exc)
-            self._client = None
             self._tool = None
             return None
 
@@ -78,25 +59,17 @@ class MCPRAGRetriever:
             return []
 
     def _normalize(self, raw: Any) -> list[RAGReference]:
-        if isinstance(raw, list):
-            # FastMCP returns content blocks, e.g. [{"type":"text","text":"{...json...}"}]
-            for item in raw:
-                if isinstance(item, dict) and isinstance(item.get("text"), str):
-                    text = item["text"].strip()
-                    try:
-                        parsed = json.loads(text)
-                        return self._normalize(parsed)
-                    except Exception:
-                        return [RAGReference(id="mcp-text", title="MCP Result", content=text, tags=[])]
+        normalized = normalize_mcp_result(raw)
+        if normalized is None:
             return []
 
-        if isinstance(raw, str):
-            return [RAGReference(id="mcp-text", title="MCP Result", content=raw, tags=[])]
+        if isinstance(normalized, str):
+            return [RAGReference(id="mcp-text", title="MCP Result", content=normalized, tags=[])]
 
-        if not isinstance(raw, dict):
+        if not isinstance(normalized, dict):
             return []
 
-        matches = raw.get("matches")
+        matches = normalized.get("matches")
         if not isinstance(matches, list):
             return []
 
