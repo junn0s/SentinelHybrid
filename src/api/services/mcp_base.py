@@ -99,11 +99,3 @@ class MCPToolClient:
                 return selected
 
             return tools[0]
-
-    async def invoke(self, tool_name: str, payload: dict[str, Any], timeout_sec: float | None = None) -> Any:
-        tool = await self.get_tool(tool_name=tool_name, fallback_first=False)
-        if tool is None:
-            raise RuntimeError(f"tool-unavailable:{tool_name}")
-        if timeout_sec is not None:
-            return await asyncio.wait_for(tool.ainvoke(payload), timeout=timeout_sec)
-        return await tool.ainvoke(payload)
