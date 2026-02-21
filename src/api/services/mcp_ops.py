@@ -1,65 +1,35 @@
 import asyncio
-import json
 import logging
 from typing import Any
 
 from src.api.config import ApiConfig
 from src.api.models import DangerEvent, DangerResponse
+from src.api.services.mcp_base import MCPToolClient, normalize_mcp_result
 
 
 class MCPOperationsPublisher:
     def __init__(self, config: ApiConfig) -> None:
         self.config = config
         self.logger = logging.getLogger(__name__)
-        self._client = None
-        self._tools: dict[str, Any] = {}
-        self._tool_lock = asyncio.Lock()
+        self._tool_client = MCPToolClient(
+            server_alias="ops",
+            transport=self.config.ops_mcp_transport,
+            url=self.config.ops_mcp_url,
+            command=self.config.ops_mcp_command,
+            args=self.config.ops_mcp_args or ["-m", "src.mcp.ops_server"],
+            logger=self.logger,
+            import_log_message="langchain-mcp-adapters unavailable for ops publish",
+        )
 
     async def _get_tool(self, tool_name: str):
-        if tool_name in self._tools:
-            return self._tools[tool_name]
-
         try:
-            from langchain_mcp_adapters.client import MultiServerMCPClient
-        except Exception as exc:  # pragma: no cover
-            self.logger.warning("langchain-mcp-adapters unavailable for ops publish: %s", exc)
+            selected = await self._tool_client.get_tool(tool_name=tool_name, fallback_first=False)
+            if selected is None:
+                self.logger.warning("MCP ops tool not found: %s", tool_name)
+            return selected
+        except Exception as exc:
+            self.logger.warning("MCP ops tool discovery failed: %s", exc)
             return None
-
-        async with self._tool_lock:
-            if tool_name in self._tools:
-                return self._tools[tool_name]
-
-            if self._client is None:
-                if self.config.ops_mcp_transport == "streamable_http" and self.config.ops_mcp_url:
-                    server_cfg = {
-                        "transport": "streamable_http",
-                        "url": self.config.ops_mcp_url,
-                    }
-                else:
-                    server_cfg = {
-                        "transport": "stdio",
-                        "command": self.config.ops_mcp_command,
-                        "args": self.config.ops_mcp_args or ["-m", "src.mcp.ops_server"],
-                    }
-                try:
-                    self._client = MultiServerMCPClient({"ops": server_cfg})
-                except Exception as exc:
-                    self.logger.warning("MCP ops client init failed: %s", exc)
-                    self._client = None
-                    return None
-
-            try:
-                tools = await self._client.get_tools()
-                for tool in tools:
-                    self._tools[tool.name] = tool
-                selected = self._tools.get(tool_name)
-                if selected is None:
-                    self.logger.warning("MCP ops tool not found: %s", tool_name)
-                return selected
-            except Exception as exc:
-                self.logger.warning("MCP ops tool discovery failed: %s", exc)
-                self._tools = {}
-                return None
 
     async def _invoke(self, tool_name: str, payload: dict[str, Any]) -> dict[str, Any]:
         tool = await self._get_tool(tool_name)
@@ -80,26 +50,14 @@ class MCPOperationsPublisher:
             return {"status": "error", "tool": tool_name, "error": str(exc)}
 
     def _normalize(self, raw: Any) -> Any:
-        if isinstance(raw, list):
-            for item in raw:
-                if isinstance(item, dict) and isinstance(item.get("text"), str):
-                    text = item["text"].strip()
-                    try:
-                        return json.loads(text)
-                    except Exception:
-                        return {"status": "ok", "message": text}
+        normalized = normalize_mcp_result(raw)
+        if normalized is None:
             return {"status": "ok"}
-
-        if isinstance(raw, str):
-            try:
-                return json.loads(raw)
-            except Exception:
-                return {"status": "ok", "message": raw}
-
-        if isinstance(raw, dict):
-            return raw
-
-        return {"status": "ok", "result": str(raw)}
+        if isinstance(normalized, dict):
+            return normalized
+        if isinstance(normalized, str):
+            return {"status": "ok", "message": normalized}
+        return {"status": "ok", "result": str(normalized)}
 
     def _discord_text(self, event: DangerEvent, response: DangerResponse) -> str:
         return (
