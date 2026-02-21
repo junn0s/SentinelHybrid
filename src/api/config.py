@@ -1,123 +1,96 @@
-import os
 import shlex
 import sys
-from dataclasses import dataclass
+from typing import Any
 
-try:
-    from dotenv import load_dotenv
-except Exception:  # pragma: no cover
-    load_dotenv = None
-
-if load_dotenv is not None:
-    load_dotenv()
+from pydantic import Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@dataclass
-class ApiConfig:
-    host: str = "0.0.0.0"
-    port: int = 8000
-    recents_max: int = 100
-    event_log_path: str = "data/events/danger_events.jsonl"
-    response_log_path: str = "data/events/danger_responses.jsonl"
+class ApiConfig(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+        populate_by_name=True,
+    )
 
-    rag_top_k: int = 3
-    rag_mcp_enabled: bool = True
-    rag_mcp_timeout_sec: float = 10.0
-    rag_mcp_tool_name: str = "retrieve_guidelines"
-    rag_mcp_query_key: str = "query"
-    rag_mcp_top_k_key: str = "top_k"
+    host: str = Field(default="0.0.0.0", validation_alias="API_HOST")
+    port: int = Field(default=8000, validation_alias="API_PORT")
+    recents_max: int = Field(default=100, validation_alias="API_RECENTS_MAX")
+    event_log_path: str = Field(default="data/events/danger_events.jsonl", validation_alias="EVENT_LOG_PATH")
+    response_log_path: str = Field(default="data/events/danger_responses.jsonl", validation_alias="RESPONSE_LOG_PATH")
 
-    rag_mcp_transport: str = "streamable_http"
-    rag_mcp_command: str = "python3"
-    rag_mcp_args: list[str] | None = None
-    rag_mcp_url: str | None = None
-    rag_mcp_host: str = "127.0.0.1"
-    rag_mcp_port: int = 8765
-    rag_mcp_path: str = "/mcp"
+    rag_top_k: int = Field(default=3, validation_alias="RAG_TOP_K")
+    rag_mcp_enabled: bool = Field(default=True, validation_alias="RAG_MCP_ENABLED")
+    rag_mcp_timeout_sec: float = Field(default=10.0, validation_alias="RAG_MCP_TIMEOUT_SEC")
+    rag_mcp_tool_name: str = Field(default="retrieve_guidelines", validation_alias="RAG_MCP_TOOL_NAME")
+    rag_mcp_query_key: str = Field(default="query", validation_alias="RAG_MCP_QUERY_KEY")
+    rag_mcp_top_k_key: str = Field(default="top_k", validation_alias="RAG_MCP_TOP_K_KEY")
 
-    ops_mcp_enabled: bool = True
-    ops_mcp_timeout_sec: float = 8.0
-    ops_mcp_discord_enabled: bool = True
-    ops_mcp_discord_tool_name: str = "discord_send_alert"
-    ops_mcp_transport: str = "streamable_http"
-    ops_mcp_command: str = "python3"
-    ops_mcp_args: list[str] | None = None
-    ops_mcp_url: str | None = None
-    ops_mcp_host: str = "127.0.0.1"
-    ops_mcp_port: int = 8766
-    ops_mcp_path: str = "/mcp"
+    rag_mcp_transport: str = Field(default="streamable_http", validation_alias="RAG_MCP_TRANSPORT")
+    rag_mcp_command: str = Field(default=sys.executable, validation_alias="RAG_MCP_COMMAND")
+    rag_mcp_args: list[str] | None = Field(default_factory=lambda: ["-m", "src.mcp.rag_server"], validation_alias="RAG_MCP_ARGS")
+    rag_mcp_url: str | None = Field(default=None, validation_alias="RAG_MCP_URL")
+    rag_mcp_host: str = Field(default="127.0.0.1", validation_alias="RAG_MCP_HOST")
+    rag_mcp_port: int = Field(default=8765, validation_alias="RAG_MCP_PORT")
+    rag_mcp_path: str = Field(default="/mcp", validation_alias="RAG_MCP_PATH")
 
-    llm_provider: str = "gemini"
-    gemini_model: str = "gemini-3-flash-preview"
-    google_api_key: str | None = None
-    gemini_tts_enabled: bool = True
-    gemini_tts_model: str = "gemini-2.5-flash-preview-tts"
-    gemini_tts_voice: str = "Kore"
-    gemini_tts_style_prompt: str | None = None
-    gemini_tts_rate_hz: int = 24000
-    gemini_tts_channels: int = 1
-    gemini_tts_sample_width: int = 2
+    ops_mcp_enabled: bool = Field(default=True, validation_alias="OPS_MCP_ENABLED")
+    ops_mcp_timeout_sec: float = Field(default=8.0, validation_alias="OPS_MCP_TIMEOUT_SEC")
+    ops_mcp_discord_enabled: bool = Field(default=True, validation_alias="OPS_MCP_DISCORD_ENABLED")
+    ops_mcp_discord_tool_name: str = Field(default="discord_send_alert", validation_alias="OPS_MCP_DISCORD_TOOL_NAME")
+    ops_mcp_transport: str = Field(default="streamable_http", validation_alias="OPS_MCP_TRANSPORT")
+    ops_mcp_command: str = Field(default=sys.executable, validation_alias="OPS_MCP_COMMAND")
+    ops_mcp_args: list[str] | None = Field(default_factory=lambda: ["-m", "src.mcp.ops_server"], validation_alias="OPS_MCP_ARGS")
+    ops_mcp_url: str | None = Field(default=None, validation_alias="OPS_MCP_URL")
+    ops_mcp_host: str = Field(default="127.0.0.1", validation_alias="OPS_MCP_HOST")
+    ops_mcp_port: int = Field(default=8766, validation_alias="OPS_MCP_PORT")
+    ops_mcp_path: str = Field(default="/mcp", validation_alias="OPS_MCP_PATH")
+
+    llm_provider: str = Field(default="gemini", validation_alias="LLM_PROVIDER")
+    gemini_model: str = Field(default="gemini-3-flash-preview", validation_alias="GEMINI_MODEL")
+    google_api_key: str | None = Field(default=None, validation_alias="GOOGLE_API_KEY")
+    gemini_tts_enabled: bool = Field(default=True, validation_alias="GEMINI_TTS_ENABLED")
+    gemini_tts_model: str = Field(default="gemini-2.5-flash-preview-tts", validation_alias="GEMINI_TTS_MODEL")
+    gemini_tts_voice: str = Field(default="Kore", validation_alias="GEMINI_TTS_VOICE")
+    gemini_tts_style_prompt: str | None = Field(default=None, validation_alias="GEMINI_TTS_STYLE_PROMPT")
+    gemini_tts_rate_hz: int = Field(default=24000, validation_alias="GEMINI_TTS_RATE_HZ")
+    gemini_tts_channels: int = Field(default=1, validation_alias="GEMINI_TTS_CHANNELS")
+    gemini_tts_sample_width: int = Field(default=2, validation_alias="GEMINI_TTS_SAMPLE_WIDTH")
+
+    @field_validator("rag_mcp_args", "ops_mcp_args", mode="before")
+    @classmethod
+    def _parse_command_args(cls, value: Any) -> list[str] | None:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            stripped = value.strip()
+            return shlex.split(stripped) if stripped else None
+        if isinstance(value, list):
+            return [str(item) for item in value]
+        return None
+
+    @field_validator("gemini_tts_style_prompt", mode="before")
+    @classmethod
+    def _normalize_style_prompt(cls, value: Any) -> str | None:
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    @model_validator(mode="after")
+    def _hydrate_default_urls(self) -> "ApiConfig":
+        if not self.rag_mcp_url and self.rag_mcp_transport == "streamable_http":
+            normalized_path = self.rag_mcp_path if self.rag_mcp_path.startswith("/") else f"/{self.rag_mcp_path}"
+            self.rag_mcp_url = f"http://{self.rag_mcp_host}:{self.rag_mcp_port}{normalized_path}"
+
+        if not self.ops_mcp_url and self.ops_mcp_transport == "streamable_http":
+            normalized_path = self.ops_mcp_path if self.ops_mcp_path.startswith("/") else f"/{self.ops_mcp_path}"
+            self.ops_mcp_url = f"http://{self.ops_mcp_host}:{self.ops_mcp_port}{normalized_path}"
+
+        return self
 
     @classmethod
     def from_env(cls) -> "ApiConfig":
-        rag_args_str = os.getenv("RAG_MCP_ARGS", "-m src.mcp.rag_server")
-        rag_mcp_host = os.getenv("RAG_MCP_HOST", "127.0.0.1")
-        rag_mcp_port = int(os.getenv("RAG_MCP_PORT", "8765"))
-        rag_mcp_path = os.getenv("RAG_MCP_PATH", "/mcp")
-        rag_mcp_transport = os.getenv("RAG_MCP_TRANSPORT", "streamable_http")
-        rag_mcp_url = os.getenv("RAG_MCP_URL")
-        if not rag_mcp_url and rag_mcp_transport == "streamable_http":
-            normalized_path = rag_mcp_path if rag_mcp_path.startswith("/") else f"/{rag_mcp_path}"
-            rag_mcp_url = f"http://{rag_mcp_host}:{rag_mcp_port}{normalized_path}"
-
-        ops_args_str = os.getenv("OPS_MCP_ARGS", "-m src.mcp.ops_server")
-        ops_mcp_host = os.getenv("OPS_MCP_HOST", "127.0.0.1")
-        ops_mcp_port = int(os.getenv("OPS_MCP_PORT", "8766"))
-        ops_mcp_path = os.getenv("OPS_MCP_PATH", "/mcp")
-        ops_mcp_transport = os.getenv("OPS_MCP_TRANSPORT", "streamable_http")
-        ops_mcp_url = os.getenv("OPS_MCP_URL")
-        if not ops_mcp_url and ops_mcp_transport == "streamable_http":
-            normalized_path = ops_mcp_path if ops_mcp_path.startswith("/") else f"/{ops_mcp_path}"
-            ops_mcp_url = f"http://{ops_mcp_host}:{ops_mcp_port}{normalized_path}"
-
-        return cls(
-            host=os.getenv("API_HOST", "0.0.0.0"),
-            port=int(os.getenv("API_PORT", "8000")),
-            recents_max=int(os.getenv("API_RECENTS_MAX", "100")),
-            event_log_path=os.getenv("EVENT_LOG_PATH", "data/events/danger_events.jsonl"),
-            response_log_path=os.getenv("RESPONSE_LOG_PATH", "data/events/danger_responses.jsonl"),
-            rag_top_k=int(os.getenv("RAG_TOP_K", "3")),
-            rag_mcp_enabled=os.getenv("RAG_MCP_ENABLED", "true").lower() == "true",
-            rag_mcp_timeout_sec=float(os.getenv("RAG_MCP_TIMEOUT_SEC", "10.0")),
-            rag_mcp_tool_name=os.getenv("RAG_MCP_TOOL_NAME", "retrieve_guidelines"),
-            rag_mcp_query_key=os.getenv("RAG_MCP_QUERY_KEY", "query"),
-            rag_mcp_top_k_key=os.getenv("RAG_MCP_TOP_K_KEY", "top_k"),
-            rag_mcp_transport=rag_mcp_transport,
-            rag_mcp_command=os.getenv("RAG_MCP_COMMAND", sys.executable),
-            rag_mcp_args=shlex.split(rag_args_str) if rag_args_str else None,
-            rag_mcp_url=rag_mcp_url,
-            rag_mcp_host=rag_mcp_host,
-            rag_mcp_port=rag_mcp_port,
-            rag_mcp_path=rag_mcp_path,
-            ops_mcp_enabled=os.getenv("OPS_MCP_ENABLED", "true").lower() == "true",
-            ops_mcp_timeout_sec=float(os.getenv("OPS_MCP_TIMEOUT_SEC", "8.0")),
-            ops_mcp_discord_enabled=os.getenv("OPS_MCP_DISCORD_ENABLED", "true").lower() == "true",
-            ops_mcp_discord_tool_name=os.getenv("OPS_MCP_DISCORD_TOOL_NAME", "discord_send_alert"),
-            ops_mcp_transport=ops_mcp_transport,
-            ops_mcp_command=os.getenv("OPS_MCP_COMMAND", sys.executable),
-            ops_mcp_args=shlex.split(ops_args_str) if ops_args_str else None,
-            ops_mcp_url=ops_mcp_url,
-            ops_mcp_host=ops_mcp_host,
-            ops_mcp_port=ops_mcp_port,
-            ops_mcp_path=ops_mcp_path,
-            llm_provider=os.getenv("LLM_PROVIDER", "gemini"),
-            gemini_model=os.getenv("GEMINI_MODEL", "gemini-3-flash-preview"),
-            google_api_key=os.getenv("GOOGLE_API_KEY"),
-            gemini_tts_enabled=os.getenv("GEMINI_TTS_ENABLED", "true").lower() == "true",
-            gemini_tts_model=os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts"),
-            gemini_tts_voice=os.getenv("GEMINI_TTS_VOICE", "Kore"),
-            gemini_tts_style_prompt=(os.getenv("GEMINI_TTS_STYLE_PROMPT") or "").strip() or None,
-            gemini_tts_rate_hz=int(os.getenv("GEMINI_TTS_RATE_HZ", "24000")),
-            gemini_tts_channels=int(os.getenv("GEMINI_TTS_CHANNELS", "1")),
-            gemini_tts_sample_width=int(os.getenv("GEMINI_TTS_SAMPLE_WIDTH", "2")),
-        )
+        return cls()
