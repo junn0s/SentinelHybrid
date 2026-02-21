@@ -1,17 +1,7 @@
-import base64
-import binascii
 import logging
-import signal
-import time
-import uuid
-from datetime import datetime, timezone
 
-import cv2
-
-from src.edge.alerts import AlertController
 from src.edge.config import EdgeConfig
-from src.edge.server_client import DangerEventClient
-from src.edge.vlm_client import VLMClient
+from src.edge.orchestrator import EdgeOrchestrator
 
 
 def _setup_logging(level: str) -> None:
@@ -21,168 +11,11 @@ def _setup_logging(level: str) -> None:
     )
 
 
-def _extract_tts_summary(ack: dict) -> str:
-    response = ack.get("response")
-    if isinstance(response, dict):
-        text = response.get("jetson_tts_summary")
-        if isinstance(text, str):
-            return text.strip()
-    return ""
-
-def _extract_tts_wav_bytes(ack: dict) -> bytes | None:
-    response = ack.get("response")
-    if not isinstance(response, dict):
-        return None
-    encoded = response.get("jetson_tts_wav_base64")
-    if not isinstance(encoded, str) or not encoded.strip():
-        return None
-    try:
-        return base64.b64decode(encoded, validate=True)
-    except (binascii.Error, ValueError):
-        try:
-            return base64.b64decode(encoded)
-        except Exception:
-            return None
-
-
 def run() -> None:
     cfg = EdgeConfig.from_env()
     _setup_logging(cfg.log_level)
-    logger = logging.getLogger(__name__)
-
-    alerts = AlertController(
-        led_pin=cfg.led_gpio_pin,
-        led_pins=cfg.danger_led_pins,
-        safe_led_pins=cfg.safe_led_pins,
-        gpio_pin_mode=cfg.gpio_pin_mode,
-        buzzer_pin=cfg.buzzer_gpio_pin,
-        siren_command=cfg.siren_command,
-        siren_on_sec=cfg.siren_on_sec,
-        siren_off_sec=cfg.siren_off_sec,
-        simulate_only=cfg.simulate_alert_only,
-        tts_enabled=cfg.tts_enabled,
-        tts_command=cfg.tts_command,
-        tts_piper_model=cfg.tts_piper_model,
-        tts_piper_speaker_id=cfg.tts_piper_speaker_id,
-        tts_timeout_sec=cfg.tts_timeout_sec,
-    )
-    logger.info(
-        "Alert config: simulate=%s pin_mode=%s danger_led_pins=%s safe_led_pins=%s buzzer_pin=%s siren_cmd=%s",
-        cfg.simulate_alert_only,
-        cfg.gpio_pin_mode,
-        cfg.danger_led_pins if cfg.danger_led_pins else [cfg.led_gpio_pin],
-        cfg.safe_led_pins if cfg.safe_led_pins else [],
-        cfg.buzzer_gpio_pin,
-        bool(cfg.siren_command),
-    )
-    client = DangerEventClient(
-        base_url=cfg.server_base_url,
-        endpoint=cfg.danger_endpoint,
-        timeout_sec=cfg.request_timeout_sec,
-        retries=cfg.request_retries,
-    )
-    vlm = VLMClient(
-        provider=cfg.vlm_provider,
-        model=cfg.vlm_model,
-        ollama_url=cfg.vlm_ollama_url,
-        timeout_sec=cfg.vlm_timeout_sec,
-        keep_alive=cfg.vlm_keep_alive,
-        use_heuristic_fallback=cfg.vlm_use_heuristic_fallback,
-        raw_log_enabled=cfg.vlm_raw_log_enabled,
-        raw_log_path=cfg.vlm_raw_log_path,
-    )
-
-    cap = cv2.VideoCapture(cfg.camera_index)
-    if not cap.isOpened():
-        raise RuntimeError(f"Failed to open camera index={cfg.camera_index}")
-
-    running = True
-    last_capture = 0.0
-    last_danger = 0.0
-
-    def _shutdown_handler(signum: int, _frame: object) -> None:
-        nonlocal running
-        logger.info("Signal received (%s). Shutting down...", signum)
-        running = False
-
-    signal.signal(signal.SIGINT, _shutdown_handler)
-    signal.signal(signal.SIGTERM, _shutdown_handler)
-
-    logger.info("Edge loop started: interval=%ss cooldown=%ss", cfg.capture_interval_sec, cfg.danger_cooldown_sec)
-
-    try:
-        while running:
-            ok, frame = cap.read()
-            now = time.monotonic()
-
-            if not ok:
-                logger.warning("Failed to read frame from camera.")
-                time.sleep(0.2)
-                continue
-
-            if now - last_capture < cfg.capture_interval_sec:
-                time.sleep(0.05)
-                continue
-
-            last_capture = now
-            is_danger, summary, confidence, infer_meta = vlm.analyze_frame(frame)
-            logger.info("Frame analyzed: is_danger=%s confidence=%.3f meta=%s", is_danger, confidence, infer_meta)
-
-            if not is_danger:
-                continue
-
-            if now - last_danger < cfg.danger_cooldown_sec:
-                logger.info("Danger detected but skipped by cooldown.")
-                continue
-
-            last_danger = now
-            event_id = f"evt_{uuid.uuid4().hex[:12]}"
-            payload = {
-                "event_id": event_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "source": cfg.source_id,
-                "is_danger": True,
-                "summary": summary,
-                "confidence": confidence,
-                "model": cfg.vlm_model,
-                "metadata": infer_meta,
-            }
-
-            alerts.trigger_danger(duration_sec=cfg.alert_duration_sec)
-            ack = client.send(payload)
-            if ack is None:
-                logger.error("Server send failed. event_id=%s payload=%s", event_id, payload)
-                if cfg.server_wav_only:
-                    logger.warning("EDGE_SERVER_WAV_ONLY=true. Skip text TTS fallback. event_id=%s", event_id)
-                    continue
-                if cfg.tts_use_event_summary_fallback:
-                    alerts.speak(summary)
-                continue
-
-            server_wav = _extract_tts_wav_bytes(ack)
-            if server_wav:
-                if alerts.play_wav_bytes(server_wav):
-                    continue
-                logger.warning("Server WAV playback failed. Falling back to text TTS. event_id=%s", event_id)
-                if cfg.server_wav_only:
-                    logger.warning("EDGE_SERVER_WAV_ONLY=true. Skip text TTS fallback. event_id=%s", event_id)
-                    continue
-            elif cfg.server_wav_only:
-                logger.warning("Server ACK had no WAV. EDGE_SERVER_WAV_ONLY=true so text TTS is skipped. event_id=%s", event_id)
-                continue
-
-            tts_summary = _extract_tts_summary(ack)
-            if not tts_summary and cfg.tts_use_event_summary_fallback:
-                tts_summary = summary
-
-            if tts_summary:
-                alerts.speak(tts_summary)
-            else:
-                logger.info("No TTS summary returned by server. event_id=%s", event_id)
-    finally:
-        alerts.cleanup()
-        cap.release()
-        logger.info("Edge loop stopped cleanly.")
+    orchestrator = EdgeOrchestrator(cfg=cfg)
+    orchestrator.run()
 
 
 if __name__ == "__main__":
