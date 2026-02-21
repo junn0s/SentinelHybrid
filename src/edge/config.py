@@ -36,6 +36,7 @@ class EdgeConfig:
     tts_piper_speaker_id: int | None = None
     tts_timeout_sec: int = 8
     tts_use_event_summary_fallback: bool = True
+    server_wav_only: bool = False
     log_level: str = "INFO"
 
     @classmethod
@@ -82,5 +83,6 @@ class EdgeConfig:
             tts_piper_speaker_id=parsed_tts_speaker,
             tts_timeout_sec=int(os.getenv("EDGE_TTS_TIMEOUT_SEC", "8")),
             tts_use_event_summary_fallback=os.getenv("EDGE_TTS_EVENT_SUMMARY_FALLBACK", "true").lower() == "true",
+            server_wav_only=os.getenv("EDGE_SERVER_WAV_ONLY", "false").lower() == "true",
             log_level=os.getenv("EDGE_LOG_LEVEL", "INFO").upper(),
         )

@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import Path
 import shlex
 import shutil
@@ -112,16 +111,6 @@ class AlertController:
             if tokens and shutil.which(tokens[0]):
                 return tokens
             self.logger.warning("Configured TTS command unavailable: %s", tts_command)
-
-        gemini_helper = Path(__file__).resolve().parents[2] / "scripts" / "tts_gemini.py"
-        gemini_api_key = ((os.getenv("GOOGLE_API_KEY") or "").strip() or (os.getenv("GEMINI_API_KEY") or "").strip())
-        if (
-            gemini_helper.exists()
-            and os.access(gemini_helper, os.X_OK)
-            and gemini_api_key
-        ):
-            self.logger.info("Using Gemini TTS helper: %s", gemini_helper)
-            return [str(gemini_helper)]
 
         # Prefer local neural TTS via Piper when model path + runtime are available.
         if self._can_use_piper():

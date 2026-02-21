@@ -34,7 +34,6 @@ class ApiConfig:
     rag_mcp_host: str = "127.0.0.1"
     rag_mcp_port: int = 8765
     rag_mcp_path: str = "/mcp"
-    rag_mcp_autostart: bool = True
 
     ops_mcp_enabled: bool = True
     ops_mcp_timeout_sec: float = 8.0
@@ -100,7 +99,6 @@ class ApiConfig:
             rag_mcp_host=rag_mcp_host,
             rag_mcp_port=rag_mcp_port,
             rag_mcp_path=rag_mcp_path,
-            rag_mcp_autostart=os.getenv("RAG_MCP_AUTOSTART", "true").lower() == "true",
             ops_mcp_enabled=os.getenv("OPS_MCP_ENABLED", "true").lower() == "true",
             ops_mcp_timeout_sec=float(os.getenv("OPS_MCP_TIMEOUT_SEC", "8.0")),
             ops_mcp_discord_enabled=os.getenv("OPS_MCP_DISCORD_ENABLED", "true").lower() == "true",

@@ -152,6 +152,9 @@ def run() -> None:
             ack = client.send(payload)
             if ack is None:
                 logger.error("Server send failed. event_id=%s payload=%s", event_id, payload)
+                if cfg.server_wav_only:
+                    logger.warning("EDGE_SERVER_WAV_ONLY=true. Skip text TTS fallback. event_id=%s", event_id)
+                    continue
                 if cfg.tts_use_event_summary_fallback:
                     alerts.speak(summary)
                 continue
@@ -161,6 +164,12 @@ def run() -> None:
                 if alerts.play_wav_bytes(server_wav):
                     continue
                 logger.warning("Server WAV playback failed. Falling back to text TTS. event_id=%s", event_id)
+                if cfg.server_wav_only:
+                    logger.warning("EDGE_SERVER_WAV_ONLY=true. Skip text TTS fallback. event_id=%s", event_id)
+                    continue
+            elif cfg.server_wav_only:
+                logger.warning("Server ACK had no WAV. EDGE_SERVER_WAV_ONLY=true so text TTS is skipped. event_id=%s", event_id)
+                continue
 
             tts_summary = _extract_tts_summary(ack)
             if not tts_summary and cfg.tts_use_event_summary_fallback:
