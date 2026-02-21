@@ -243,12 +243,13 @@ body {
 }
 
 .event-table tr.selected {
-  background-color: var(--c-navy);
-  color: var(--c-light);
+  background-color: transparent;
+  color: var(--c-dark);
+  font-weight: 700;
 }
 
 .event-table tr.selected td {
-  border-bottom-color: var(--c-navy);
+  border-bottom-color: var(--c-blue);
 }
 
 .empty-row {
@@ -300,7 +301,8 @@ body {
 }
 
 .reference-item {
-  background-color: var(--c-blue);
+  background-color: rgba(141, 169, 196, 0.28);
+  border: 1px solid rgba(19, 64, 116, 0.22);
   color: var(--c-dark);
   padding: 14px;
   border-radius: 8px;
