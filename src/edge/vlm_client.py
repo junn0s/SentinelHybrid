@@ -88,6 +88,7 @@ class VLMClient:
                 "risk_score는 0~1 사이 숫자."
             ),
             image_base64=encoded_image,
+            response_format_json=True,
         )
 
         parsed = self._parse_classification(classify_raw)
@@ -203,7 +204,12 @@ class VLMClient:
         )
         return is_danger, summary, confidence, meta
 
-    def _call_ollama(self, prompt: str, image_base64: str) -> tuple[str, dict[str, Any]]:
+    def _call_ollama(
+        self,
+        prompt: str,
+        image_base64: str,
+        response_format_json: bool = False,
+    ) -> tuple[str, dict[str, Any]]:
         payload: dict[str, Any] = {
             "model": self.model,
             "stream": False,
@@ -219,6 +225,8 @@ class VLMClient:
                 "temperature": 0,
             },
         }
+        if response_format_json:
+            payload["format"] = "json"
         response = self.session.post(self.ollama_url, json=payload, timeout=self.timeout_sec)
         response.raise_for_status()
         body = response.json()
