@@ -19,6 +19,9 @@ class VLMClient:
         timeout_sec: int = 20,
         keep_alive: str = "10m",
         use_heuristic_fallback: bool = True,
+        min_danger_score: float = 0.7,
+        uncertain_as_safe: bool = True,
+        danger_double_check: bool = True,
         raw_log_enabled: bool = True,
         raw_log_path: str = "data/edge/vlm_raw_responses.jsonl",
     ) -> None:
@@ -28,6 +31,9 @@ class VLMClient:
         self.timeout_sec = timeout_sec
         self.keep_alive = keep_alive
         self.use_heuristic_fallback = use_heuristic_fallback
+        self.min_danger_score = max(0.0, min(1.0, float(min_danger_score)))
+        self.uncertain_as_safe = uncertain_as_safe
+        self.danger_double_check = danger_double_check
         self.raw_log_enabled = raw_log_enabled
         self.raw_log_path = Path(raw_log_path)
         self.logger = logging.getLogger(__name__)
@@ -72,20 +78,69 @@ class VLMClient:
 
     def _analyze_with_ollama(self, frame: np.ndarray) -> tuple[bool, str, float, dict[str, Any]]:
         encoded_image = self._encode_frame_to_base64(frame)
+
         classify_raw, classify_meta = self._call_ollama(
             prompt=(
-                "당신은 산업안전 감시 분류기다. "
-                "출력은 정확히 한 단어만: DANGER 또는 SAFE. "
-                "설명, 문장, 구두점, 추가 텍스트 금지."
+                "당신은 산업안전 이진 분류기다.\n"
+                "아래 JSON 객체 하나만 출력하라. 다른 문장/설명/코드블록 금지.\n"
+                "{\"label\":\"DANGER|SAFE\",\"risk_score\":0.0,\"hazard_type\":\"fire|fall|intrusion|electrical|unknown\",\"evidence\":[\"근거1\",\"근거2\"]}\n"
+                "규칙: 위험 근거가 불충분하거나 애매하면 label=SAFE, risk_score<=0.49.\n"
+                "risk_score는 0~1 사이 숫자."
             ),
             image_base64=encoded_image,
         )
-        label = self._normalize_label(classify_raw)
-        if label is None:
-            raise RuntimeError(f"Unexpected classification response: {classify_raw!r}")
 
-        is_danger = label == "DANGER"
-        confidence = 0.93 if is_danger else 0.88
+        parsed = self._parse_classification(classify_raw)
+        parse_status = "json-parsed" if parsed is not None else "parse-failed"
+        if parsed is None:
+            if self.uncertain_as_safe:
+                parsed = {
+                    "label": "SAFE",
+                    "risk_score": 0.0,
+                    "hazard_type": "unknown",
+                    "evidence": [],
+                }
+                parse_status = "parse-failed-safe-default"
+            else:
+                raise RuntimeError(f"Unexpected classification response: {classify_raw!r}")
+
+        label = parsed["label"]
+        risk_score = parsed["risk_score"]
+        hazard_type = parsed["hazard_type"]
+        evidence = parsed["evidence"]
+
+        decision_notes: list[str] = []
+        final_label = label
+
+        if final_label == "DANGER" and risk_score < self.min_danger_score:
+            final_label = "SAFE"
+            decision_notes.append(
+                f"downgraded_by_min_danger_score({risk_score:.2f}<{self.min_danger_score:.2f})"
+            )
+
+        verify_raw = ""
+        verify_meta: dict[str, Any] = {}
+        verify_label: str | None = None
+        if final_label == "DANGER" and self.danger_double_check:
+            verify_raw, verify_meta = self._call_ollama(
+                prompt=(
+                    "재검증 단계다. 즉시 대피/통제가 필요한 명백한 위험이면 DANGER, 아니면 SAFE. "
+                    "애매하면 SAFE. 출력은 한 단어만: DANGER 또는 SAFE."
+                ),
+                image_base64=encoded_image,
+            )
+            verify_label = self._normalize_label(verify_raw)
+            if verify_label != "DANGER":
+                final_label = "SAFE"
+                decision_notes.append("downgraded_by_double_check")
+
+        is_danger = final_label == "DANGER"
+        confidence = self._derive_confidence(
+            final_label=final_label,
+            risk_score=risk_score,
+            verify_label=verify_label,
+        )
+
         summary = "특이 위험 상황은 감지되지 않았습니다."
         summary_source = "safe-default"
         summary_raw = ""
@@ -108,8 +163,18 @@ class VLMClient:
         meta = {
             "provider": "ollama",
             "model": self.model,
-            "classification": label,
-            "classification_raw": (classify_raw or "").strip()[:80],
+            "classification": final_label,
+            "classification_raw": (classify_raw or "").strip()[:200],
+            "classification_parse_status": parse_status,
+            "label_before_guardrail": label,
+            "risk_score": risk_score,
+            "min_danger_score": self.min_danger_score,
+            "hazard_type": hazard_type,
+            "evidence": evidence,
+            "danger_double_check": self.danger_double_check,
+            "double_check_raw": (verify_raw or "").strip()[:80],
+            "double_check_label": verify_label,
+            "decision_notes": decision_notes,
             "summary_source": summary_source,
             "request_prompt_eval_count": classify_meta.get("prompt_eval_count"),
             "request_eval_count": classify_meta.get("eval_count"),
@@ -121,14 +186,19 @@ class VLMClient:
                 "status": "ok",
                 "provider": "ollama",
                 "model": self.model,
-                "classification": label,
+                "classification_final": final_label,
+                "classification_input": parsed,
+                "classification_parse_status": parse_status,
                 "classification_raw": (classify_raw or "").strip(),
                 "classification_response": classify_meta,
+                "double_check_raw": (verify_raw or "").strip(),
+                "double_check_response": verify_meta,
                 "summary_raw": (summary_raw or "").strip(),
                 "summary_response": summary_meta,
                 "summary_used": summary,
                 "confidence": confidence,
                 "summary_source": summary_source,
+                "decision_notes": decision_notes,
             }
         )
         return is_danger, summary, confidence, meta
@@ -179,6 +249,89 @@ class VLMClient:
         if has_safe and not has_danger:
             return "SAFE"
         return None
+
+    def _parse_classification(self, raw_text: str) -> dict[str, Any] | None:
+        if not raw_text:
+            return None
+
+        text = raw_text.strip()
+        parsed_obj: dict[str, Any] | None = None
+
+        try:
+            loaded = json.loads(text)
+            if isinstance(loaded, dict):
+                parsed_obj = loaded
+        except Exception:
+            parsed_obj = None
+
+        if parsed_obj is None:
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                try:
+                    loaded = json.loads(text[start : end + 1])
+                    if isinstance(loaded, dict):
+                        parsed_obj = loaded
+                except Exception:
+                    parsed_obj = None
+
+        if parsed_obj is None:
+            label = self._normalize_label(text)
+            if label is None:
+                return None
+            return {
+                "label": label,
+                "risk_score": 0.55 if label == "DANGER" else 0.45,
+                "hazard_type": "unknown",
+                "evidence": [],
+            }
+
+        label = self._normalize_label(str(parsed_obj.get("label", "")))
+        if label is None:
+            return None
+
+        risk_score = self._coerce_score(parsed_obj.get("risk_score"))
+        if risk_score is None:
+            risk_score = 0.5 if label == "DANGER" else 0.2
+
+        hazard_type = str(parsed_obj.get("hazard_type", "unknown") or "unknown").strip().lower()
+        if not hazard_type:
+            hazard_type = "unknown"
+
+        evidence_raw = parsed_obj.get("evidence", [])
+        evidence: list[str] = []
+        if isinstance(evidence_raw, list):
+            evidence = [str(item).strip() for item in evidence_raw if str(item).strip()]
+
+        return {
+            "label": label,
+            "risk_score": risk_score,
+            "hazard_type": hazard_type,
+            "evidence": evidence[:3],
+        }
+
+    @staticmethod
+    def _coerce_score(value: Any) -> float | None:
+        try:
+            score = float(value)
+        except Exception:
+            return None
+        if score < 0:
+            score = 0.0
+        if score > 1:
+            score = 1.0
+        return score
+
+    @staticmethod
+    def _derive_confidence(final_label: str, risk_score: float, verify_label: str | None) -> float:
+        if final_label == "DANGER":
+            base = max(0.7, min(0.99, risk_score))
+            if verify_label == "DANGER":
+                base = min(0.99, base + 0.04)
+            return round(base, 3)
+
+        safe_conf = max(0.51, 1.0 - risk_score)
+        return round(min(0.95, safe_conf), 3)
 
     @staticmethod
     def _sanitize_summary(raw_text: str) -> str:
