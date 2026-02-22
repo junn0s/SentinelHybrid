@@ -178,8 +178,16 @@ class EdgeOrchestrator:
                     infer_meta=infer_meta,
                 )
 
-                self.alerts.trigger_danger(duration_sec=self.cfg.alert_duration_sec)
+                danger_alert_sec = max(self.cfg.alert_duration_sec, self.cfg.min_siren_duration_sec)
+                self.logger.info(
+                    "Danger workflow started: event_id=%s min_siren_sec=%s",
+                    event_id,
+                    danger_alert_sec,
+                )
+                alert_thread = self.alerts.trigger_danger_async(duration_sec=danger_alert_sec)
                 ack = self.client.send(payload)
+                alert_thread.join()
+
                 if ack is None:
                     self.logger.error("Server send failed. event_id=%s payload=%s", event_id, payload)
                     if self.cfg.server_wav_only:
