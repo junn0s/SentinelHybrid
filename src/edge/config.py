@@ -24,6 +24,7 @@ class EdgeConfig:
     request_timeout_sec: int = 5
     request_retries: int = 2
     alert_duration_sec: int = 3
+    min_siren_duration_sec: int = 10
     led_gpio_pin: int = 17
     danger_led_pins: list[int] | None = None
     safe_led_pins: list[int] | None = None
@@ -74,6 +75,7 @@ class EdgeConfig:
             request_timeout_sec=int(os.getenv("EDGE_REQUEST_TIMEOUT_SEC", "5")),
             request_retries=int(os.getenv("EDGE_REQUEST_RETRIES", "2")),
             alert_duration_sec=int(os.getenv("EDGE_ALERT_DURATION_SEC", "3")),
+            min_siren_duration_sec=int(os.getenv("EDGE_MIN_SIREN_DURATION_SEC", "10")),
             led_gpio_pin=int(os.getenv("EDGE_LED_GPIO_PIN", "17")),
             danger_led_pins=parsed_led_pins,
             safe_led_pins=parsed_safe_led_pins,

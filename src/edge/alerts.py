@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from src.edge.alerts_indicator import IndicatorOutput
 from src.edge.alerts_speech import SpeechOutput
@@ -53,6 +54,16 @@ class AlertController:
 
     def trigger_danger(self, duration_sec: int = 3) -> None:
         self.indicator.trigger_danger(duration_sec=duration_sec)
+
+    def trigger_danger_async(self, duration_sec: int = 3) -> threading.Thread:
+        worker = threading.Thread(
+            target=self.trigger_danger,
+            kwargs={"duration_sec": duration_sec},
+            daemon=True,
+            name="edge-danger-alert",
+        )
+        worker.start()
+        return worker
 
     def speak(self, text: str) -> None:
         self.speech.speak(text)
