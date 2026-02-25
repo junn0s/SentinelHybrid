@@ -100,7 +100,6 @@ class EdgeOrchestrator:
             use_heuristic_fallback=cfg.vlm_use_heuristic_fallback,
             min_danger_score=cfg.vlm_min_danger_score,
             uncertain_as_safe=cfg.vlm_uncertain_as_safe,
-            danger_double_check=cfg.vlm_danger_double_check,
             raw_log_enabled=cfg.vlm_raw_log_enabled,
             raw_log_path=cfg.vlm_raw_log_path,
         )
