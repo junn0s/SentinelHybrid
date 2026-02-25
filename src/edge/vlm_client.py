@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+from typing import Literal
 
 import cv2
 import numpy as np
@@ -18,9 +19,9 @@ except Exception:  # pragma: no cover - runtime environment dependent
 class EdgeVLMResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    label: str
+    label: Literal["DANGER", "SAFE"]
     risk_score: float = Field(ge=0.0, le=1.0)
-    hazard_type: str = "unknown"
+    hazard_type: Literal["fire", "fall", "intrusion", "electrical", "unknown"] = "unknown"
     summary: str = ""
     evidence: list[str] = Field(default_factory=list)
 
@@ -148,15 +149,12 @@ class VLMClient:
 
         classify_raw, classify_meta = self._call_ollama(
             prompt=(
-                "당신은 산업안전 비전 분석기다.\n"
-                "아래 JSON 객체 하나만 출력하라. 다른 문장/설명/코드블록 금지.\n"
-                "{\"label\":\"DANGER|SAFE\",\"risk_score\":0.0,\"hazard_type\":\"fire|fall|intrusion|electrical|unknown\",\"summary\":\"...\",\"evidence\":[\"근거1\",\"근거2\"]}\n"
-                "규칙:\n"
-                "1) 위험 근거가 불충분하면 label=SAFE, risk_score<=0.49.\n"
-                "2) risk_score는 0~1 숫자.\n"
-                "3) summary는 상황 설명이다. 보이는 상황을 한국어 1~2문장으로 구체적으로 작성하라.\n"
-                "4) 한 번의 판단 결과로 최종 출력한다.\n"
-                "5) 반드시 JSON만 출력한다."
+                "당신은 산업안전 비전 분석기다. 입력 이미지를 보고 JSON 객체 1개만 출력하라(추가 텍스트/설명/코드블록 금지).\n"
+                "label: DANGER 또는 SAFE\n"
+                "risk_score: 0~1 실수 (위험 근거가 불충분하면 SAFE 및 0.49 이하)\n"
+                "hazard_type: fire, fall, intrusion, electrical, unknown 중 하나\n"
+                "summary: 한국어 1~2문장으로 관찰된 상황을 구체적으로 서술\n"
+                "evidence: 관찰 근거 최대 3개 문자열 배열\n"
             ),
             image=jpeg_bytes,
             response_format_json=True,
