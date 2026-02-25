@@ -3,7 +3,7 @@ from pathlib import Path
 
 from src.api.config import ApiConfig
 from src.api.repositories.event_repository import EventRepository
-from src.api.services.mcp_ops import MCPOperationsPublisher
+from src.api.services.mcp_discord import MCPOperationsPublisher
 from src.api.services.pipeline import DangerProcessingPipeline
 
 

@@ -1,5 +1,4 @@
 :root {
-  /* 허용된 5가지 색상 코드 */
   --c-dark: #131200;
   --c-navy: #134074;
   --c-blue: #8da9c4;
@@ -25,7 +24,6 @@ body {
   min-height: 100vh;
 }
 
-/* 사이드바 */
 .sidebar {
   width: 260px;
   background-color: var(--c-dark);
@@ -85,7 +83,6 @@ body {
   gap: 10px;
 }
 
-/* 메인 콘텐츠 */
 .main-content {
   flex-grow: 1;
   padding: 30px 40px;
@@ -151,7 +148,6 @@ body {
   font-size: 14px;
 }
 
-/* 4개 지표 카드 영역 */
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -176,13 +172,11 @@ body {
   margin: 0;
 }
 
-/* 스크린샷과 동일한 카드 색상 배치 */
 .card-1 { background-color: var(--c-navy); color: var(--c-light); }
 .card-2 { background-color: var(--c-blue); color: var(--c-light); }
 .card-3 { background-color: var(--c-light); color: var(--c-dark); border: 2px solid var(--c-blue); }
 .card-4 { background-color: var(--c-coral); color: var(--c-dark); }
 
-/* 하단 콘텐츠 그리드 */
 .content-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -213,7 +207,6 @@ body {
   font-weight: bold;
 }
 
-/* 테이블 디자인 */
 .event-table {
   width: 100%;
   border-collapse: collapse;
@@ -258,7 +251,6 @@ body {
   padding: 40px !important;
 }
 
-/* 태그 및 상세 블록 */
 .tag {
   display: inline-block;
   padding: 6px 12px;

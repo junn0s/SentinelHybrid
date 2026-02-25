@@ -12,7 +12,7 @@ from src.api.routes.health import router as health_router
 from src.api.services.gemini_tts import GeminiTTSGenerator
 from src.api.services.llm_responder import LLMResponder
 from src.api.services.local_rag import LocalRAGRetriever
-from src.api.services.mcp_ops import MCPOperationsPublisher
+from src.api.services.mcp_discord import MCPOperationsPublisher
 from src.api.services.mcp_rag import MCPRAGRetriever
 from src.api.services.pipeline import DangerProcessingPipeline
 

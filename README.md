@@ -13,7 +13,7 @@
 
 SentinelHybrid는 현장에서 즉시 반응하는 **온디바이스 안전 대응**과, 클라우드에서 지식기반으로 정교하게 대응하는 **RAG 인텔리전스**를 결합한 안전 시스템입니다.
 
-카메라 입력을 Jetson Orin Nano에서 실시간 분석하고, 위험 상황일 때만 서버와 연동해 대응 매뉴얼 생성, 로그 적재, 슬랙 알림, 음성 안내까지 자동으로 수행합니다.
+카메라 입력을 Jetson Orin Nano에서 실시간 분석하고, 위험 상황일 때만 서버와 연동해 대응 매뉴얼 생성, 로그 적재, Discord 알림, 음성 안내까지 자동으로 수행합니다.
 
 ---
 
@@ -81,7 +81,7 @@ SentinelHybrid는 감지 이후의 **실제 대응 단계**까지 자동화합�
 | **LLM Reasoning** | ![Gemini API](https://img.shields.io/badge/Gemini%20API-8E75B2?style=flat-square&logo=google+gemini&logoColor=white) | Cloud reasoning |
 | **Orchestration** | ![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=flat-square&logo=langchain&logoColor=white) | Agent orchestration |
 | **Context Protocol** | ![MCP](https://img.shields.io/badge/MCP-000000?style=flat-square) | Model Context Protocol |
-| **RAG** | ![Chroma](https://img.shields.io/badge/Chroma-FFB000?style=flat-square) ![Pinecone](https://img.shields.io/badge/Pinecone-1E90FF?style=flat-square) | Vector DB (MCP) |
+| **RAG** | ![Chroma](https://img.shields.io/badge/Chroma-FFB000?style=flat-square) | Vector DB (MCP) |
 | **Alerting** | ![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat-square&logo=discord&logoColor=white) | Real-time alerting(MCP) |
 | **Local Response** | `LED` `Siren` `TTS Speaker` | Local actuators (GPIO/USB Audio) |
 
@@ -113,7 +113,7 @@ SentinelHybrid/
 │   │   ├── services/           # MCP/Local RAG + LLM 응답 파이프라인
 │   │   └── static/admin/       # 관리자 UI (HTML/CSS/JS)
 │   ├── edge/                   # Jetson/로컬 추론 루프 + 경고 제어 + 서버 전송
-│   ├── mcp/                    # FastMCP 기반 RAG 서버
+│   ├── mcp/                    # FastMCP 기반 MCP 서버(RAG/Ops)
 │   ├── rag/                    # 기본 안전 매뉴얼 및 로컬 검색 유틸
 │   └── sim/                    # 위험 이벤트 시뮬레이터
 ```
@@ -123,20 +123,31 @@ SentinelHybrid/
 ## 프로젝트 실행 및 테스트
 
 ```bash
-# 1) 가상환경/패키지 설치
-uv sync
+# 1) 가상환경 생성/활성화
+python -m venv sentinelhybrid-venv
+source sentinelhybrid-venv/bin/activate
 
-# 2) 환경 변수 파일 준비 (.env)
+# 2) 패키지 설치
+pip install -r requirements.txt
+
+# 3) 환경 변수 파일 준비 (.env)
 # 팀 표준 키 목록에 맞춰 .env 직접 작성
 
-# 3) Edge 파이프라인 실행 (Jetson)
-python -m src.edge.main
+# 4) MCP RAG 서버 실행
+python -m src.mcp.rag_server
 
-# 4) FastAPI 서버 실행
+# 5) MCP Ops 서버 실행
+python -m src.mcp.ops_server
+
+# 6) FastAPI 서버 실행
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 
-# 5) 테스트 실행
-pytest -q
+# 7) Edge 파이프라인 실행 (Jetson)
+python -m src.edge.main
+
+# 8) (선택) 테스트 실행
+pip install pytest
+python -m pytest -q
 ```
 
 ```text
