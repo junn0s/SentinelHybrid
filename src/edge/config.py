@@ -18,7 +18,6 @@ class EdgeConfig:
     vlm_use_heuristic_fallback: bool = True
     vlm_min_danger_score: float = 0.7
     vlm_uncertain_as_safe: bool = True
-    vlm_danger_double_check: bool = True
     vlm_raw_log_enabled: bool = True
     vlm_raw_log_path: str = "data/edge/vlm_raw_responses.jsonl"
     request_timeout_sec: int = 5
@@ -69,7 +68,6 @@ class EdgeConfig:
             vlm_use_heuristic_fallback=os.getenv("EDGE_VLM_HEURISTIC_FALLBACK", "true").lower() == "true",
             vlm_min_danger_score=float(os.getenv("EDGE_VLM_MIN_DANGER_SCORE", "0.7")),
             vlm_uncertain_as_safe=os.getenv("EDGE_VLM_UNCERTAIN_AS_SAFE", "true").lower() == "true",
-            vlm_danger_double_check=os.getenv("EDGE_VLM_DANGER_DOUBLE_CHECK", "true").lower() == "true",
             vlm_raw_log_enabled=os.getenv("EDGE_VLM_RAW_LOG_ENABLED", "true").lower() == "true",
             vlm_raw_log_path=os.getenv("EDGE_VLM_RAW_LOG_PATH", "data/edge/vlm_raw_responses.jsonl").strip(),
             request_timeout_sec=int(os.getenv("EDGE_REQUEST_TIMEOUT_SEC", "5")),
