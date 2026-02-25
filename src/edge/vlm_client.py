@@ -149,6 +149,8 @@ class VLMClient:
         classify_raw, classify_meta = self._call_ollama(
             prompt=(
                 "당신은 산업안전 비전 분석기다.\n"
+                "아래 JSON 객체 하나만 출력하라. 다른 문장/설명/코드블록 금지.\n"
+                "{\"label\":\"DANGER|SAFE\",\"risk_score\":0.0,\"hazard_type\":\"fire|fall|intrusion|electrical|unknown\",\"summary\":\"...\",\"evidence\":[\"근거1\",\"근거2\"]}\n"
                 "규칙:\n"
                 "1) 위험 근거가 불충분하면 label=SAFE, risk_score<=0.49.\n"
                 "2) risk_score는 0~1 숫자.\n"
