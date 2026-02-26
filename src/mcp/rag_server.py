@@ -77,8 +77,18 @@ def _init_chroma() -> None:
         # Keep manual entries synchronized.
         collection.upsert(
             ids=[m.id for m in MANUALS],
-            documents=[_prepare_document_text(m.content) for m in MANUALS],
-            metadatas=[{"title": m.title, "tags": ",".join(m.tags)} for m in MANUALS],
+            documents=[_prepare_document_text(m.index_text()) for m in MANUALS],
+            metadatas=[
+                {
+                    "title": m.title,
+                    "tags": ",".join(m.tags),
+                    "hazard_type": m.hazard_type,
+                    "severity": m.severity,
+                    "version": m.version,
+                    "content": m.content,
+                }
+                for m in MANUALS
+            ],
         )
 
         CHROMA_COLLECTION = collection
@@ -104,11 +114,14 @@ def retrieve_guidelines(query: str, top_k: int = 3) -> dict:
                 tags = []
                 if isinstance(meta, dict) and isinstance(meta.get("tags"), str):
                     tags = [t for t in meta["tags"].split(",") if t]
+                content = _cleanup_document_text(str(docs[idx])) if idx < len(docs) else ""
+                if isinstance(meta, dict) and isinstance(meta.get("content"), str) and meta.get("content", "").strip():
+                    content = str(meta["content"]).strip()
                 matches.append(
                     {
                         "id": str(item_id),
                         "title": str(meta.get("title", "RAG Match")) if isinstance(meta, dict) else "RAG Match",
-                        "content": _cleanup_document_text(str(docs[idx])) if idx < len(docs) else "",
+                        "content": content,
                         "tags": tags,
                     }
                 )
