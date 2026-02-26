@@ -19,6 +19,10 @@ class ManualEntry:
     ppe: list[str] | None = None
     prohibitions: list[str] | None = None
     restart_conditions: list[str] | None = None
+    trigger_signals: list[str] | None = None
+    first_60_sec: list[str] | None = None
+    first_5_min: list[str] | None = None
+    escalation_criteria: list[str] | None = None
     version: str = "1.0"
     updated_at: str = ""
     source: str = ""
@@ -42,6 +46,14 @@ class ManualEntry:
             blocks.append("[금지사항] " + " / ".join(self.prohibitions))
         if self.restart_conditions:
             blocks.append("[재개조건] " + " / ".join(self.restart_conditions))
+        if self.trigger_signals:
+            blocks.append("[트리거신호] " + " / ".join(self.trigger_signals))
+        if self.first_60_sec:
+            blocks.append("[60초조치] " + " / ".join(self.first_60_sec))
+        if self.first_5_min:
+            blocks.append("[5분조치] " + " / ".join(self.first_5_min))
+        if self.escalation_criteria:
+            blocks.append("[상향조건] " + " / ".join(self.escalation_criteria))
         if self.tags:
             blocks.append("[태그] " + ", ".join(self.tags))
         if self.content:
@@ -68,6 +80,10 @@ def _compose_content_from_fields(raw: dict) -> str:
     reporting = _as_str_list(raw.get("reporting"))
     prohibitions = _as_str_list(raw.get("prohibitions"))
     restart = _as_str_list(raw.get("restart_conditions"))
+    trigger = _as_str_list(raw.get("trigger_signals"))
+    first_60 = _as_str_list(raw.get("first_60_sec"))
+    first_5 = _as_str_list(raw.get("first_5_min"))
+    escalation = _as_str_list(raw.get("escalation_criteria"))
 
     parts: list[str] = []
     if situation:
@@ -82,6 +98,14 @@ def _compose_content_from_fields(raw: dict) -> str:
         parts.append("금지사항: " + "; ".join(prohibitions))
     if restart:
         parts.append("재개조건: " + "; ".join(restart))
+    if trigger:
+        parts.append("트리거신호: " + "; ".join(trigger))
+    if first_60:
+        parts.append("60초조치: " + "; ".join(first_60))
+    if first_5:
+        parts.append("5분조치: " + "; ".join(first_5))
+    if escalation:
+        parts.append("상향조건: " + "; ".join(escalation))
     return " ".join(parts).strip()
 
 
@@ -106,6 +130,10 @@ def load_manuals(manual_path: Path | None = None) -> list[ManualEntry]:
                 ppe=_as_str_list(item.get("ppe")),
                 prohibitions=_as_str_list(item.get("prohibitions")),
                 restart_conditions=_as_str_list(item.get("restart_conditions")),
+                trigger_signals=_as_str_list(item.get("trigger_signals")),
+                first_60_sec=_as_str_list(item.get("first_60_sec")),
+                first_5_min=_as_str_list(item.get("first_5_min")),
+                escalation_criteria=_as_str_list(item.get("escalation_criteria")),
                 version=str(item.get("version", "1.0")).strip() or "1.0",
                 updated_at=str(item.get("updated_at", "")).strip(),
                 source=str(item.get("source", "")).strip(),
@@ -131,6 +159,10 @@ def search_manuals(query: str, manuals: list[ManualEntry], top_k: int = 3) -> li
                     *(entry.reporting or []),
                     *(entry.prohibitions or []),
                     *(entry.restart_conditions or []),
+                    *(entry.trigger_signals or []),
+                    *(entry.first_60_sec or []),
+                    *(entry.first_5_min or []),
+                    *(entry.escalation_criteria or []),
                 ]
             )
         )

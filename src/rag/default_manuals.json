@@ -1,350 +1,1797 @@
 [
   {
     "id": "fire-001",
-    "title": "배전반 인근 연기 감지 대응",
+    "title": "배전반 연기 발생 즉시대응",
     "hazard_type": "fire",
     "severity": "high",
-    "tags": ["화재", "연기", "배전반", "전원차단"],
-    "situation": "배전반 또는 케이블 트레이 인근에서 연기/탄내가 관찰되는 상황",
+    "tags": [
+      "화재",
+      "연기",
+      "배전반",
+      "전원차단"
+    ],
+    "situation": "배전반/케이블 트레이에서 연기 또는 탄내가 관찰됨",
+    "trigger_signals": [
+      "연기 기둥",
+      "탄내",
+      "배전반 표면 온도 상승"
+    ],
+    "first_60_sec": [
+      "인근 작업 중지 지시",
+      "메인 차단기 OFF",
+      "반경 10m 출입 통제"
+    ],
+    "first_5_min": [
+      "초기 진압 가능 여부 판단",
+      "119 신고 기준 점검",
+      "가연물 이격"
+    ],
     "immediate_actions": [
-      "해당 구역 작업 즉시 중지",
-      "메인 전원 차단",
-      "인원 즉시 대피"
+      "현장 책임자 호출",
+      "소화기 배치",
+      "대피 방송"
     ],
     "secondary_actions": [
-      "초기 진압 가능 시 소화기 사용",
-      "확산 징후 확인 시 119 신고",
-      "가연성 자재 접근 통제"
+      "열화상 카메라로 잔열 확인",
+      "전기팀 절연 점검"
     ],
-    "reporting": ["현장 책임자", "안전 관리자", "119"],
-    "ppe": ["절연 장갑", "보안경"],
-    "prohibitions": ["원인 확인 전 재투입 금지", "임의 통전 금지"],
-    "restart_conditions": ["전기 담당 승인", "잔연/발열 없음 확인", "재발 방지 조치 완료"],
-    "version": "1.0",
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자",
+      "전기 담당"
+    ],
+    "ppe": [
+      "절연 장갑",
+      "보안경"
+    ],
+    "prohibitions": [
+      "원인 확인 전 재통전 금지",
+      "무자격자 패널 개방 금지"
+    ],
+    "escalation_criteria": [
+      "화염이 30초 이상 지속",
+      "연기 농도 증가",
+      "인명 대피 지연"
+    ],
+    "restart_conditions": [
+      "잔열 40도 이하",
+      "전기 담당 승인",
+      "원인 제거 보고"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 배전반/케이블 트레이에서 연기 또는 탄내가 관찰됨 즉시조치: 현장 책임자 호출; 소화기 배치; 대피 방송 60초조치: 인근 작업 중지 지시; 메인 차단기 OFF; 반경 10m 출입 통제 5분조치: 초기 진압 가능 여부 판단; 119 신고 기준 점검; 가연물 이격 상향조건: 화염이 30초 이상 지속; 연기 농도 증가; 인명 대피 지연"
   },
   {
     "id": "fire-002",
-    "title": "용접 구역 불꽃 비산 대응",
+    "title": "용접 불꽃 비산 대응",
     "hazard_type": "fire",
     "severity": "high",
-    "tags": ["용접", "불꽃", "가연성", "차폐"],
-    "situation": "용접 중 불꽃이 가연성 자재 방향으로 비산되는 상황",
-    "immediate_actions": ["용접 작업 정지", "불꽃 비산 구역 통제", "소화기 배치"],
-    "secondary_actions": ["가연성 자재 이격", "방염포 설치", "감시자 지정"],
-    "reporting": ["현장 책임자", "안전 관리자"],
-    "ppe": ["방염 장갑", "안면 보호구"],
-    "prohibitions": ["감시자 없이 작업 재개 금지"],
-    "restart_conditions": ["차폐/이격 완료", "초기 화재 위험 제거"],
-    "version": "1.0",
+    "tags": [
+      "용접",
+      "불꽃",
+      "비산",
+      "방염"
+    ],
+    "situation": "용접 불꽃이 가연성 자재 방향으로 비산",
+    "trigger_signals": [
+      "방염포 외부 비산",
+      "가연물 표면 스파크",
+      "작업자 후퇴"
+    ],
+    "first_60_sec": [
+      "용접 즉시 중단",
+      "가연물 3m 이격",
+      "감시자 배치"
+    ],
+    "first_5_min": [
+      "발화 지점 확인",
+      "소화기 준비",
+      "작업허가서 재확인"
+    ],
+    "immediate_actions": [
+      "차폐판 재설치",
+      "통제선 설정",
+      "재점화 감시"
+    ],
+    "secondary_actions": [
+      "방염포 손상 교체",
+      "작업자 재교육"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "방염 장갑",
+      "안면 보호구"
+    ],
+    "prohibitions": [
+      "감시자 없는 용접 금지"
+    ],
+    "escalation_criteria": [
+      "연기 발생",
+      "불꽃이 적치물로 확산",
+      "진압 실패"
+    ],
+    "restart_conditions": [
+      "차폐/이격 완료",
+      "감시자 배치",
+      "점화원 통제 확인"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 용접 불꽃이 가연성 자재 방향으로 비산 즉시조치: 차폐판 재설치; 통제선 설정; 재점화 감시 60초조치: 용접 즉시 중단; 가연물 3m 이격; 감시자 배치 5분조치: 발화 지점 확인; 소화기 준비; 작업허가서 재확인 상향조건: 연기 발생; 불꽃이 적치물로 확산; 진압 실패"
   },
   {
     "id": "fire-003",
-    "title": "설비 과열 의심 대응",
+    "title": "배터리 충전구역 열폭주 의심 대응",
     "hazard_type": "fire",
-    "severity": "medium",
-    "tags": ["과열", "온도상승", "이상음", "점검"],
-    "situation": "모터/전원장치에서 평소 대비 과열 또는 이상음이 감지되는 상황",
-    "immediate_actions": ["설비 정지", "전원 차단", "근접 작업자 이격"],
-    "secondary_actions": ["열화상 또는 온도계로 확인", "유지보수팀 점검 요청"],
-    "reporting": ["설비 담당자", "현장 책임자"],
-    "ppe": ["보안경", "방열 장갑"],
-    "prohibitions": ["임의 냉각수 투입 금지"],
-    "restart_conditions": ["점검 완료", "정상 온도 복귀", "원인 제거"],
-    "version": "1.0",
+    "severity": "critical",
+    "tags": [
+      "배터리",
+      "열폭주",
+      "충전",
+      "격리"
+    ],
+    "situation": "충전 중 배터리 팽창/연기/고온 현상이 발생",
+    "trigger_signals": [
+      "배터리 팽창",
+      "표면 온도 급상승",
+      "백색 연기"
+    ],
+    "first_60_sec": [
+      "충전 회로 차단",
+      "문제 배터리 격리",
+      "인원 후퇴"
+    ],
+    "first_5_min": [
+      "열원 확산 확인",
+      "소화설비 대기",
+      "환기 강화"
+    ],
+    "immediate_actions": [
+      "격리 용기에 보관",
+      "인접 배터리 분리"
+    ],
+    "secondary_actions": [
+      "제조사 매뉴얼 기반 진단",
+      "폐기 절차 착수"
+    ],
+    "reporting": [
+      "설비 담당",
+      "안전 관리자",
+      "현장 책임자"
+    ],
+    "ppe": [
+      "내열 장갑",
+      "보안경",
+      "방진 마스크"
+    ],
+    "prohibitions": [
+      "변형 배터리 재충전 금지",
+      "맨손 취급 금지"
+    ],
+    "escalation_criteria": [
+      "화염 발생",
+      "2차 배터리 이상 동시 발생"
+    ],
+    "restart_conditions": [
+      "원인 분석 완료",
+      "격리구역 안전 확인",
+      "승인서 발급"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 충전 중 배터리 팽창/연기/고온 현상이 발생 즉시조치: 격리 용기에 보관; 인접 배터리 분리 60초조치: 충전 회로 차단; 문제 배터리 격리; 인원 후퇴 5분조치: 열원 확산 확인; 소화설비 대기; 환기 강화 상향조건: 화염 발생; 2차 배터리 이상 동시 발생"
   },
   {
     "id": "fire-004",
     "title": "창고 적재물 발화 의심 대응",
     "hazard_type": "fire",
     "severity": "high",
-    "tags": ["창고", "적재물", "발화", "대피"],
-    "situation": "창고 적재 구역에서 연기/섬광이 보이는 상황",
-    "immediate_actions": ["주변 인원 즉시 대피", "출입 통제", "전원 차단"],
-    "secondary_actions": ["초기 진압 시도", "소방서 신고", "인접 구역 확산 차단"],
-    "reporting": ["창고 관리자", "안전 관리자", "119"],
-    "ppe": ["방진 마스크", "보호 장갑"],
-    "prohibitions": ["원인 미확인 상태 접근 금지"],
-    "restart_conditions": ["소방/안전 승인", "재점화 위험 제거"],
-    "version": "1.0",
+    "tags": [
+      "창고",
+      "적재물",
+      "발화",
+      "대피"
+    ],
+    "situation": "창고 적재물 사이에서 연기/섬광이 간헐적으로 관찰",
+    "trigger_signals": [
+      "적재물 틈새 연기",
+      "열기",
+      "비정상 냄새"
+    ],
+    "first_60_sec": [
+      "구역 폐쇄",
+      "근접 인원 대피",
+      "전원 차단"
+    ],
+    "first_5_min": [
+      "발화 지점 식별",
+      "확산 경로 차단",
+      "소방 신고"
+    ],
+    "immediate_actions": [
+      "방화문 닫기",
+      "소화기/소화전 준비"
+    ],
+    "secondary_actions": [
+      "재고 손실 기록",
+      "화재원인 조사"
+    ],
+    "reporting": [
+      "창고 관리자",
+      "안전 관리자",
+      "119"
+    ],
+    "ppe": [
+      "방진 마스크",
+      "보호 장갑"
+    ],
+    "prohibitions": [
+      "발화 구역 단독 진입 금지"
+    ],
+    "escalation_criteria": [
+      "화염 확인",
+      "유독 연기 증가",
+      "통로 차단 발생"
+    ],
+    "restart_conditions": [
+      "소방 승인",
+      "환기 완료",
+      "적재 재배치 완료"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 창고 적재물 사이에서 연기/섬광이 간헐적으로 관찰 즉시조치: 방화문 닫기; 소화기/소화전 준비 60초조치: 구역 폐쇄; 근접 인원 대피; 전원 차단 5분조치: 발화 지점 식별; 확산 경로 차단; 소방 신고 상향조건: 화염 확인; 유독 연기 증가; 통로 차단 발생"
   },
   {
     "id": "fire-005",
-    "title": "배터리 충전 구역 열폭주 의심 대응",
+    "title": "가연성 용제 누출+점화원 동시 위험 대응",
+    "hazard_type": "fire",
+    "severity": "critical",
+    "tags": [
+      "용제",
+      "누출",
+      "점화원",
+      "폭발"
+    ],
+    "situation": "가연성 용제 누출 구역에 용접/열원 작업이 병존",
+    "trigger_signals": [
+      "용제 냄새",
+      "바닥 확산",
+      "인접 열원"
+    ],
+    "first_60_sec": [
+      "열원 작업 전면 중지",
+      "구역 봉쇄",
+      "강제 환기"
+    ],
+    "first_5_min": [
+      "누출 밸브 차단",
+      "흡착포 투입",
+      "폭발 위험 반경 통제"
+    ],
+    "immediate_actions": [
+      "방폭 장비만 사용",
+      "비상대피 준비"
+    ],
+    "secondary_actions": [
+      "누출량 계측",
+      "환경안전팀 호출"
+    ],
+    "reporting": [
+      "안전 관리자",
+      "현장 책임자",
+      "필요 시 소방"
+    ],
+    "ppe": [
+      "유기용제용 방독 마스크",
+      "내화학 장갑"
+    ],
+    "prohibitions": [
+      "일반 전기 스위치 조작 금지",
+      "비방폭 장비 사용 금지"
+    ],
+    "escalation_criteria": [
+      "점화/폭발 징후",
+      "누출량 확대"
+    ],
+    "restart_conditions": [
+      "누출 완전 제거",
+      "가스농도 기준 이하",
+      "승인 완료"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 가연성 용제 누출 구역에 용접/열원 작업이 병존 즉시조치: 방폭 장비만 사용; 비상대피 준비 60초조치: 열원 작업 전면 중지; 구역 봉쇄; 강제 환기 5분조치: 누출 밸브 차단; 흡착포 투입; 폭발 위험 반경 통제 상향조건: 점화/폭발 징후; 누출량 확대"
+  },
+  {
+    "id": "fire-006",
+    "title": "집진설비 분진 발화 위험 대응",
     "hazard_type": "fire",
     "severity": "high",
-    "tags": ["배터리", "충전", "열폭주", "격리"],
-    "situation": "배터리 충전 구역에서 과열, 팽창, 연기 발생 징후가 있는 상황",
-    "immediate_actions": ["충전 즉시 중단", "해당 배터리 격리", "주변 인원 이격"],
-    "secondary_actions": ["소화 장비 준비", "열화상 모니터링", "전문 인력 호출"],
-    "reporting": ["설비 담당자", "안전 관리자"],
-    "ppe": ["내열 장갑", "보안경"],
-    "prohibitions": ["변형 배터리 재사용 금지"],
-    "restart_conditions": ["원인 분석 완료", "대체 장비 확보"],
-    "version": "1.0",
+    "tags": [
+      "분진",
+      "집진기",
+      "발화",
+      "청소"
+    ],
+    "situation": "집진기/덕트 내부 분진 축적으로 발화 가능성이 증가",
+    "trigger_signals": [
+      "분진 누적",
+      "덕트 온도상승",
+      "이상 진동"
+    ],
+    "first_60_sec": [
+      "집진설비 정지",
+      "주변 작업 중단",
+      "출입 제한"
+    ],
+    "first_5_min": [
+      "점검구 확인",
+      "소화장비 배치",
+      "분진 제거 계획 수립"
+    ],
+    "immediate_actions": [
+      "점화원 제거",
+      "정전기 방전 조치"
+    ],
+    "secondary_actions": [
+      "정기 청소 주기 조정",
+      "필터 교체"
+    ],
+    "reporting": [
+      "설비 담당",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "방진 마스크",
+      "보안경"
+    ],
+    "prohibitions": [
+      "가동 중 내부 점검 금지"
+    ],
+    "escalation_criteria": [
+      "연기 발생",
+      "덕트 내부 화염"
+    ],
+    "restart_conditions": [
+      "분진 제거",
+      "온도 정상화",
+      "점검 승인"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 집진기/덕트 내부 분진 축적으로 발화 가능성이 증가 즉시조치: 점화원 제거; 정전기 방전 조치 60초조치: 집진설비 정지; 주변 작업 중단; 출입 제한 5분조치: 점검구 확인; 소화장비 배치; 분진 제거 계획 수립 상향조건: 연기 발생; 덕트 내부 화염"
   },
   {
     "id": "fall-001",
-    "title": "누출액으로 인한 미끄럼 위험 대응",
+    "title": "누출액 미끄럼 낙상 대응",
     "hazard_type": "fall",
     "severity": "high",
-    "tags": ["낙상", "미끄럼", "누출", "통제"],
-    "situation": "통로/작업장 바닥에 액체가 누출되어 미끄럼 위험이 있는 상황",
-    "immediate_actions": ["이동 즉시 중단", "위험 구역 통제", "주의 표지 설치"],
-    "secondary_actions": ["흡착포/청소 도구로 즉시 제거", "누출 원인 차단"],
-    "reporting": ["현장 책임자", "안전 관리자"],
-    "ppe": ["미끄럼 방지 안전화"],
-    "prohibitions": ["정리 전 통행 재개 금지"],
-    "restart_conditions": ["바닥 건조", "원인 제거", "재발 방지 조치"],
-    "version": "1.0",
+    "tags": [
+      "낙상",
+      "미끄럼",
+      "누출",
+      "통로"
+    ],
+    "situation": "통로 바닥 액체 누출로 미끄럼 위험",
+    "trigger_signals": [
+      "바닥 반사면 증가",
+      "작업자 미끄럼 동작",
+      "경고 표지 부재"
+    ],
+    "first_60_sec": [
+      "통행 중지",
+      "주의 표지 설치",
+      "우회 동선 안내"
+    ],
+    "first_5_min": [
+      "흡착포 투입",
+      "누출원 차단",
+      "바닥 건조"
+    ],
+    "immediate_actions": [
+      "부상자 확인",
+      "응급 처치 준비"
+    ],
+    "secondary_actions": [
+      "재발 방지 매트 설치",
+      "청소 체크리스트 점검"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "미끄럼 방지 안전화"
+    ],
+    "prohibitions": [
+      "정리 전 통행 재개 금지"
+    ],
+    "escalation_criteria": [
+      "연속 미끄럼 발생",
+      "부상자 발생"
+    ],
+    "restart_conditions": [
+      "바닥 건조",
+      "원인 제거",
+      "안전 확인"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 통로 바닥 액체 누출로 미끄럼 위험 즉시조치: 부상자 확인; 응급 처치 준비 60초조치: 통행 중지; 주의 표지 설치; 우회 동선 안내 5분조치: 흡착포 투입; 누출원 차단; 바닥 건조 상향조건: 연속 미끄럼 발생; 부상자 발생"
   },
   {
     "id": "fall-002",
-    "title": "통로 적치물 전도 위험 대응",
+    "title": "사다리 고소작업 추락 대응",
     "hazard_type": "fall",
-    "severity": "medium",
-    "tags": ["통로", "적치물", "걸림", "낙상"],
-    "situation": "작업 통로에 자재가 적치되어 걸림/넘어짐 위험이 있는 상황",
-    "immediate_actions": ["통로 일시 폐쇄", "적치물 이동", "우회 동선 안내"],
-    "secondary_actions": ["적치 기준선 재표시", "정리 상태 점검"],
-    "reporting": ["현장 책임자"],
-    "ppe": ["안전화"],
-    "prohibitions": ["통로 적치 반복 금지"],
-    "restart_conditions": ["통로 확보", "동선 안전 확인"],
-    "version": "1.0",
+    "severity": "high",
+    "tags": [
+      "사다리",
+      "고소",
+      "추락",
+      "보조자"
+    ],
+    "situation": "사다리 고정 불량 또는 보조자 미배치 상태의 고소작업",
+    "trigger_signals": [
+      "사다리 흔들림",
+      "3점 지지 미준수",
+      "보조자 부재"
+    ],
+    "first_60_sec": [
+      "작업 즉시 중단",
+      "작업자 하강 지시",
+      "사다리 재고정"
+    ],
+    "first_5_min": [
+      "보조자 배치",
+      "추락방지대 확인",
+      "작업허가 재검토"
+    ],
+    "immediate_actions": [
+      "고정장치 교체",
+      "하부 통제선 설치"
+    ],
+    "secondary_actions": [
+      "고소작업 재교육",
+      "장비 점검 기록"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "안전모",
+      "추락 방지대",
+      "안전화"
+    ],
+    "prohibitions": [
+      "1인 고소작업 금지"
+    ],
+    "escalation_criteria": [
+      "추락 발생",
+      "고정장치 반복 불량"
+    ],
+    "restart_conditions": [
+      "점검 합격",
+      "보조자 배치",
+      "허가 승인"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 사다리 고정 불량 또는 보조자 미배치 상태의 고소작업 즉시조치: 고정장치 교체; 하부 통제선 설치 60초조치: 작업 즉시 중단; 작업자 하강 지시; 사다리 재고정 5분조치: 보조자 배치; 추락방지대 확인; 작업허가 재검토 상향조건: 추락 발생; 고정장치 반복 불량"
   },
   {
     "id": "fall-003",
-    "title": "사다리 작업 중 추락 위험 대응",
+    "title": "계단/경사로 전도 위험 대응",
     "hazard_type": "fall",
-    "severity": "high",
-    "tags": ["사다리", "추락", "고소작업", "보조자"],
-    "situation": "사다리 고정이 불안정하거나 보조자 없는 고소 작업 상황",
-    "immediate_actions": ["작업 즉시 중단", "사다리 고정 상태 점검", "보조자 배치"],
-    "secondary_actions": ["추락 방지 장비 착용 확인", "작업 방법 재교육"],
-    "reporting": ["현장 책임자", "안전 관리자"],
-    "ppe": ["안전모", "추락 방지대"],
-    "prohibitions": ["1인 고소작업 금지"],
-    "restart_conditions": ["고정 상태 확인", "보조자 배치", "장비 착용 완료"],
-    "version": "1.0",
+    "severity": "medium",
+    "tags": [
+      "계단",
+      "경사로",
+      "전도",
+      "난간"
+    ],
+    "situation": "계단·경사로의 오염/파손으로 전도 위험 증가",
+    "trigger_signals": [
+      "난간 오염",
+      "미끄럼 자국",
+      "조도 부족"
+    ],
+    "first_60_sec": [
+      "구역 통제",
+      "보행 속도 저감 안내",
+      "우회 경로 안내"
+    ],
+    "first_5_min": [
+      "청소·건조",
+      "난간 상태 점검",
+      "조명 보강"
+    ],
+    "immediate_actions": [
+      "미끄럼 방지 패드 임시 부착"
+    ],
+    "secondary_actions": [
+      "파손부 수리",
+      "정기점검 주기 단축"
+    ],
+    "reporting": [
+      "시설 담당",
+      "현장 책임자"
+    ],
+    "ppe": [
+      "미끄럼 방지 안전화"
+    ],
+    "prohibitions": [
+      "정비 전 물류 운반 금지"
+    ],
+    "escalation_criteria": [
+      "2회 이상 미끄럼 신고",
+      "부상 발생"
+    ],
+    "restart_conditions": [
+      "파손 복구",
+      "건조 완료",
+      "점검 승인"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 계단·경사로의 오염/파손으로 전도 위험 증가 즉시조치: 미끄럼 방지 패드 임시 부착 60초조치: 구역 통제; 보행 속도 저감 안내; 우회 경로 안내 5분조치: 청소·건조; 난간 상태 점검; 조명 보강 상향조건: 2회 이상 미끄럼 신고; 부상 발생"
   },
   {
     "id": "fall-004",
-    "title": "계단/경사로 미끄럼 대응",
+    "title": "통로 적치물 걸림 위험 대응",
     "hazard_type": "fall",
     "severity": "medium",
-    "tags": ["계단", "경사로", "미끄럼", "난간"],
-    "situation": "계단 또는 경사로에서 물기/오염으로 미끄럼 위험이 높은 상황",
-    "immediate_actions": ["구역 통제", "난간 이용 안내", "청소 및 건조"],
-    "secondary_actions": ["미끄럼 방지 패드 보강", "조명 상태 점검"],
-    "reporting": ["시설 담당자"],
-    "ppe": ["미끄럼 방지 안전화"],
-    "prohibitions": ["정리 전 통행 허용 금지"],
-    "restart_conditions": ["건조 완료", "보강 조치 완료"],
-    "version": "1.0",
+    "tags": [
+      "통로",
+      "적치",
+      "걸림",
+      "전도"
+    ],
+    "situation": "작업 통로에 자재가 적치되어 보행 걸림 위험 존재",
+    "trigger_signals": [
+      "통로 폭 축소",
+      "장비/케이블 돌출",
+      "우회 동선 혼잡"
+    ],
+    "first_60_sec": [
+      "통로 일시 폐쇄",
+      "적치물 이동 지시",
+      "보행자 이격"
+    ],
+    "first_5_min": [
+      "적치 기준선 복원",
+      "통로 폭 기준 확인"
+    ],
+    "immediate_actions": [
+      "장애물 즉시 제거",
+      "케이블 정리"
+    ],
+    "secondary_actions": [
+      "5S 점검",
+      "적치 위반 재교육"
+    ],
+    "reporting": [
+      "현장 책임자"
+    ],
+    "ppe": [
+      "안전화"
+    ],
+    "prohibitions": [
+      "통로 상시 적치 금지"
+    ],
+    "escalation_criteria": [
+      "반복 위반",
+      "보행 사고 발생"
+    ],
+    "restart_conditions": [
+      "통로 확보",
+      "표시 복구",
+      "확인 서명"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 작업 통로에 자재가 적치되어 보행 걸림 위험 존재 즉시조치: 장애물 즉시 제거; 케이블 정리 60초조치: 통로 일시 폐쇄; 적치물 이동 지시; 보행자 이격 5분조치: 적치 기준선 복원; 통로 폭 기준 확인 상향조건: 반복 위반; 보행 사고 발생"
   },
   {
     "id": "fall-005",
-    "title": "야간 저조도 구역 전도 위험 대응",
+    "title": "플랫폼 가장자리 추락 위험 대응",
+    "hazard_type": "fall",
+    "severity": "high",
+    "tags": [
+      "플랫폼",
+      "가장자리",
+      "추락",
+      "난간"
+    ],
+    "situation": "난간 미설치/파손된 플랫폼에서 근접 작업 수행",
+    "trigger_signals": [
+      "난간 결손",
+      "근접 작업",
+      "작업자 후퇴 동작"
+    ],
+    "first_60_sec": [
+      "작업 중지",
+      "가장자리 접근 금지",
+      "안전선 설치"
+    ],
+    "first_5_min": [
+      "임시 난간 설치",
+      "작업 반경 재설정"
+    ],
+    "immediate_actions": [
+      "추락 방지대 체결 확인"
+    ],
+    "secondary_actions": [
+      "영구 난간 보수",
+      "작업 허가 재발행"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "추락 방지대",
+      "안전모"
+    ],
+    "prohibitions": [
+      "난간 미복구 상태 작업 금지"
+    ],
+    "escalation_criteria": [
+      "추락 직전 상황 반복",
+      "난간 파손 확대"
+    ],
+    "restart_conditions": [
+      "난간 복구",
+      "추락방지대 점검",
+      "승인 완료"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 난간 미설치/파손된 플랫폼에서 근접 작업 수행 즉시조치: 추락 방지대 체결 확인 60초조치: 작업 중지; 가장자리 접근 금지; 안전선 설치 5분조치: 임시 난간 설치; 작업 반경 재설정 상향조건: 추락 직전 상황 반복; 난간 파손 확대"
+  },
+  {
+    "id": "fall-006",
+    "title": "야간 저조도 전도 대응",
     "hazard_type": "fall",
     "severity": "medium",
-    "tags": ["야간", "저조도", "전도", "조명"],
-    "situation": "야간 작업 구역의 조도 부족으로 장애물 식별이 어려운 상황",
-    "immediate_actions": ["작업 속도 저감", "임시 조명 설치", "보행 동선 통제"],
-    "secondary_actions": ["정규 조명 복구", "장애물 정리"],
-    "reporting": ["시설 담당자", "현장 책임자"],
-    "ppe": ["반사 조끼", "안전화"],
-    "prohibitions": ["무조명 작업 지속 금지"],
-    "restart_conditions": ["조도 기준 충족", "동선 안전 확인"],
-    "version": "1.0",
+    "tags": [
+      "야간",
+      "저조도",
+      "전도",
+      "조명"
+    ],
+    "situation": "야간 작업에서 조도 부족으로 장애물 식별 어려움",
+    "trigger_signals": [
+      "그림자 구역 확대",
+      "장애물 인지 지연",
+      "작업자 손전등 의존"
+    ],
+    "first_60_sec": [
+      "이동 속도 저감",
+      "임시 조명 투입",
+      "고위험 작업 중지"
+    ],
+    "first_5_min": [
+      "조도 측정",
+      "고정 조명 복구 요청"
+    ],
+    "immediate_actions": [
+      "반사 표지 부착",
+      "동선 단순화"
+    ],
+    "secondary_actions": [
+      "조명 설비 점검",
+      "야간 작업 계획 재수립"
+    ],
+    "reporting": [
+      "시설 담당",
+      "현장 책임자"
+    ],
+    "ppe": [
+      "반사 조끼",
+      "안전화"
+    ],
+    "prohibitions": [
+      "무조명 상태 고소/중량 작업 금지"
+    ],
+    "escalation_criteria": [
+      "조명 복구 지연",
+      "전도 사고 발생"
+    ],
+    "restart_conditions": [
+      "조도 기준 충족",
+      "동선 점검 완료"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 야간 작업에서 조도 부족으로 장애물 식별 어려움 즉시조치: 반사 표지 부착; 동선 단순화 60초조치: 이동 속도 저감; 임시 조명 투입; 고위험 작업 중지 5분조치: 조도 측정; 고정 조명 복구 요청 상향조건: 조명 복구 지연; 전도 사고 발생"
   },
   {
     "id": "intrusion-001",
-    "title": "통제구역 비인가 접근 대응",
+    "title": "통제구역 비인가 인원 접근 대응",
     "hazard_type": "intrusion",
     "severity": "high",
-    "tags": ["침입", "비인가", "출입통제", "보안"],
-    "situation": "통제구역에 출입권한 없는 인원이 접근하는 상황",
-    "immediate_actions": ["출입 즉시 통제", "일반 작업자 안전 구역 이동", "보안 호출"],
-    "secondary_actions": ["신원 확인", "접근 경로 차단", "CCTV 표시 구간 보존"],
-    "reporting": ["보안 담당자", "현장 책임자"],
-    "ppe": ["해당 없음"],
-    "prohibitions": ["단독 제압 시도 금지"],
-    "restart_conditions": ["보안 확인 완료", "위협 제거"],
-    "version": "1.0",
+    "tags": [
+      "침입",
+      "비인가",
+      "출입통제",
+      "보안"
+    ],
+    "situation": "출입 권한 없는 인원이 통제구역 접근",
+    "trigger_signals": [
+      "출입증 미소지",
+      "통제선 무시",
+      "경고 무응답"
+    ],
+    "first_60_sec": [
+      "출입 차단",
+      "작업자 안전구역 이동",
+      "보안 호출"
+    ],
+    "first_5_min": [
+      "신원 확인",
+      "접근 경로 봉쇄",
+      "CCTV 구간 고정"
+    ],
+    "immediate_actions": [
+      "현장 방송",
+      "경고등 활성화"
+    ],
+    "secondary_actions": [
+      "출입기록 대조",
+      "재발 방지 브리핑"
+    ],
+    "reporting": [
+      "보안 담당자",
+      "현장 책임자"
+    ],
+    "ppe": [
+      "해당 없음"
+    ],
+    "prohibitions": [
+      "비전문 인력 단독 제압 금지"
+    ],
+    "escalation_criteria": [
+      "위협 행동 동반",
+      "무단 진입 지속",
+      "다수 인원 접근"
+    ],
+    "restart_conditions": [
+      "위협 제거",
+      "보안 승인",
+      "작업자 안전 확인"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 출입 권한 없는 인원이 통제구역 접근 즉시조치: 현장 방송; 경고등 활성화 60초조치: 출입 차단; 작업자 안전구역 이동; 보안 호출 5분조치: 신원 확인; 접근 경로 봉쇄; CCTV 구간 고정 상향조건: 위협 행동 동반; 무단 진입 지속; 다수 인원 접근"
   },
   {
     "id": "intrusion-002",
-    "title": "야간 무단 동선 감지 대응",
+    "title": "야간 비정상 동선 감지 대응",
     "hazard_type": "intrusion",
     "severity": "high",
-    "tags": ["야간", "무단동선", "보안", "신고"],
-    "situation": "야간에 비정상 동선이 반복 감지되는 상황",
-    "immediate_actions": ["해당 구역 접근 차단", "현장 인원 대피", "보안 시스템 경보 강화"],
-    "secondary_actions": ["영상 로그 백업", "출입기록 대조"],
-    "reporting": ["보안팀", "현장 책임자", "필요 시 경찰"],
-    "ppe": ["해당 없음"],
-    "prohibitions": ["확인되지 않은 인원 추적 금지"],
-    "restart_conditions": ["보안 점검 완료", "추가 위협 없음"],
-    "version": "1.0",
+    "tags": [
+      "야간",
+      "동선",
+      "보안",
+      "경찰"
+    ],
+    "situation": "야간 시간대 비인가 동선 반복 감지",
+    "trigger_signals": [
+      "반복 왕복 동선",
+      "사각지대 체류",
+      "출입기록 불일치"
+    ],
+    "first_60_sec": [
+      "해당 구역 잠금",
+      "현장 인원 이격",
+      "보안팀 통보"
+    ],
+    "first_5_min": [
+      "영상 로그 백업",
+      "접근 지점 통제",
+      "경찰 신고 판단"
+    ],
+    "immediate_actions": [
+      "경보 레벨 상향",
+      "순찰 인력 증원"
+    ],
+    "secondary_actions": [
+      "출입 정책 재검토",
+      "조명/카메라 보강"
+    ],
+    "reporting": [
+      "보안팀",
+      "현장 책임자",
+      "필요 시 경찰"
+    ],
+    "ppe": [
+      "해당 없음"
+    ],
+    "prohibitions": [
+      "확인 전 단독 추적 금지"
+    ],
+    "escalation_criteria": [
+      "도주 시도",
+      "위협 물체 소지",
+      "설비 접근"
+    ],
+    "restart_conditions": [
+      "상황 종료 통보",
+      "보안 점검 완료"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 야간 시간대 비인가 동선 반복 감지 즉시조치: 경보 레벨 상향; 순찰 인력 증원 60초조치: 해당 구역 잠금; 현장 인원 이격; 보안팀 통보 5분조치: 영상 로그 백업; 접근 지점 통제; 경찰 신고 판단 상향조건: 도주 시도; 위협 물체 소지; 설비 접근"
   },
   {
     "id": "intrusion-003",
-    "title": "보호장비 미착용 인원 접근 대응",
+    "title": "보호구 미착용 인원 위험구역 접근 대응",
     "hazard_type": "intrusion",
     "severity": "medium",
-    "tags": ["PPE미착용", "비인가", "출입제한"],
-    "situation": "보호장비 미착용 인원이 위험 구역에 접근하는 상황",
-    "immediate_actions": ["즉시 접근 중지 지시", "출입문 통제", "PPE 착용 확인"],
-    "secondary_actions": ["안전 교육 재안내", "재발 시 출입권한 제한"],
-    "reporting": ["현장 책임자", "안전 관리자"],
-    "ppe": ["안전모", "안전화", "조끼"],
-    "prohibitions": ["PPE 미착용 상태 작업 허용 금지"],
-    "restart_conditions": ["PPE 착용 확인", "안전 교육 확인"],
-    "version": "1.0",
+    "tags": [
+      "PPE",
+      "미착용",
+      "접근제한",
+      "안전"
+    ],
+    "situation": "보호구 미착용 인원이 제한구역 접근",
+    "trigger_signals": [
+      "안전모/안전화 미착용",
+      "경고 무시 접근"
+    ],
+    "first_60_sec": [
+      "접근 중단 지시",
+      "출입문 통제",
+      "PPE 제공"
+    ],
+    "first_5_min": [
+      "착용 확인",
+      "작업위험 재안내",
+      "재발 기록"
+    ],
+    "immediate_actions": [
+      "현장 책임자 확인 서명"
+    ],
+    "secondary_actions": [
+      "반복 위반자 교육",
+      "권한 재검토"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "안전모",
+      "안전화",
+      "반사 조끼"
+    ],
+    "prohibitions": [
+      "미착용 상태 작업 허용 금지"
+    ],
+    "escalation_criteria": [
+      "반복 위반",
+      "고위험 장비 접근"
+    ],
+    "restart_conditions": [
+      "PPE 착용 완료",
+      "위험 고지 확인"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 보호구 미착용 인원이 제한구역 접근 즉시조치: 현장 책임자 확인 서명 60초조치: 접근 중단 지시; 출입문 통제; PPE 제공 5분조치: 착용 확인; 작업위험 재안내; 재발 기록 상향조건: 반복 위반; 고위험 장비 접근"
   },
   {
     "id": "intrusion-004",
-    "title": "폭력/위협 행동 의심 대응",
+    "title": "폭력·위협 행동 의심 대응",
     "hazard_type": "intrusion",
-    "severity": "high",
-    "tags": ["위협", "폭력", "신변보호", "경찰"],
-    "situation": "현장에서 위협적 행동 또는 폭력 징후가 관찰되는 상황",
-    "immediate_actions": ["인원 즉시 분리", "안전 구역 대피", "비상 연락"],
-    "secondary_actions": ["현장 출입 봉쇄", "증거 기록 보존"],
-    "reporting": ["보안 담당자", "현장 책임자", "경찰"],
-    "ppe": ["해당 없음"],
-    "prohibitions": ["비전문 인력 개입 금지"],
-    "restart_conditions": ["공식 상황 종료 통보", "안전 확인"],
-    "version": "1.0",
+    "severity": "critical",
+    "tags": [
+      "폭력",
+      "위협",
+      "신변보호",
+      "비상"
+    ],
+    "situation": "현장 내 위협적 언행/폭력 행동 징후 감지",
+    "trigger_signals": [
+      "고성/위협 제스처",
+      "작업자 후퇴",
+      "물체 투척"
+    ],
+    "first_60_sec": [
+      "일반 인원 즉시 대피",
+      "접근 차단",
+      "비상 연락"
+    ],
+    "first_5_min": [
+      "보안 인력 도착 유도",
+      "위협 구역 격리",
+      "경찰 신고"
+    ],
+    "immediate_actions": [
+      "피난로 확보",
+      "응급의료 대기"
+    ],
+    "secondary_actions": [
+      "증거 보존",
+      "피해자 보호 조치"
+    ],
+    "reporting": [
+      "보안팀",
+      "현장 책임자",
+      "경찰"
+    ],
+    "ppe": [
+      "해당 없음"
+    ],
+    "prohibitions": [
+      "비전문 인력 개입 금지"
+    ],
+    "escalation_criteria": [
+      "신체 접촉 발생",
+      "흉기 의심",
+      "다수 연루"
+    ],
+    "restart_conditions": [
+      "경찰 통제 종료",
+      "현장 안전 확인",
+      "사후 브리핑 완료"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 현장 내 위협적 언행/폭력 행동 징후 감지 즉시조치: 피난로 확보; 응급의료 대기 60초조치: 일반 인원 즉시 대피; 접근 차단; 비상 연락 5분조치: 보안 인력 도착 유도; 위협 구역 격리; 경찰 신고 상향조건: 신체 접촉 발생; 흉기 의심; 다수 연루"
   },
   {
     "id": "intrusion-005",
     "title": "차량 통제선 침범 대응",
     "hazard_type": "intrusion",
-    "severity": "medium",
-    "tags": ["차량", "통제선", "침범", "차단"],
-    "situation": "작업 차량 또는 외부 차량이 통제선을 침범하는 상황",
-    "immediate_actions": ["차량 이동 중지 지시", "작업자 이격", "유도 인력 배치"],
-    "secondary_actions": ["통제선 보강", "진입 경로 재설계"],
-    "reporting": ["현장 책임자", "교통 유도 담당"],
-    "ppe": ["반사 조끼"],
-    "prohibitions": ["통제선 미복구 상태 운행 금지"],
-    "restart_conditions": ["동선 재정비", "통제선 복구"],
-    "version": "1.0",
+    "severity": "high",
+    "tags": [
+      "차량",
+      "통제선",
+      "침범",
+      "유도"
+    ],
+    "situation": "외부 차량이 작업 통제선 내부 진입 시도",
+    "trigger_signals": [
+      "통제선 돌파",
+      "작업자 급회피",
+      "역주행 접근"
+    ],
+    "first_60_sec": [
+      "차량 정지 신호",
+      "작업자 즉시 이격",
+      "유도 인력 배치"
+    ],
+    "first_5_min": [
+      "진입 경로 폐쇄",
+      "차량 운전자 확인",
+      "재진입 차단"
+    ],
+    "immediate_actions": [
+      "가변 표지판 설정",
+      "방호벽 임시 배치"
+    ],
+    "secondary_actions": [
+      "동선 재설계",
+      "차량 통제 SOP 재교육"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "교통 유도 담당"
+    ],
+    "ppe": [
+      "반사 조끼",
+      "안전화"
+    ],
+    "prohibitions": [
+      "통제선 해제 전 차량 운행 허용 금지"
+    ],
+    "escalation_criteria": [
+      "재침범",
+      "충돌 위험",
+      "운전자 불응"
+    ],
+    "restart_conditions": [
+      "통제선 복구",
+      "동선 점검 완료"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 외부 차량이 작업 통제선 내부 진입 시도 즉시조치: 가변 표지판 설정; 방호벽 임시 배치 60초조치: 차량 정지 신호; 작업자 즉시 이격; 유도 인력 배치 5분조치: 진입 경로 폐쇄; 차량 운전자 확인; 재진입 차단 상향조건: 재침범; 충돌 위험; 운전자 불응"
+  },
+  {
+    "id": "intrusion-006",
+    "title": "민감설비 촬영/접근 시도 대응",
+    "hazard_type": "intrusion",
+    "severity": "medium",
+    "tags": [
+      "민감설비",
+      "촬영",
+      "접근시도",
+      "정보보호"
+    ],
+    "situation": "비인가 인원이 민감 설비 근접 촬영 또는 접근 시도",
+    "trigger_signals": [
+      "촬영 장비 사용",
+      "금지구역 체류",
+      "경고 무시"
+    ],
+    "first_60_sec": [
+      "접근 중단 고지",
+      "보안 인력 호출",
+      "설비 구역 봉쇄"
+    ],
+    "first_5_min": [
+      "신원 확인",
+      "촬영물 삭제/보전 절차 확인",
+      "기록 보존"
+    ],
+    "immediate_actions": [
+      "접근 로그 확보",
+      "현장 인원 분리"
+    ],
+    "secondary_actions": [
+      "보안정책 재공지",
+      "취약구역 표시 보강"
+    ],
+    "reporting": [
+      "보안팀",
+      "현장 책임자"
+    ],
+    "ppe": [
+      "해당 없음"
+    ],
+    "prohibitions": [
+      "권한 확인 전 정보 공유 금지"
+    ],
+    "escalation_criteria": [
+      "데이터 반출 의심",
+      "다수 공범"
+    ],
+    "restart_conditions": [
+      "보안팀 승인",
+      "취약점 보강 완료"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 비인가 인원이 민감 설비 근접 촬영 또는 접근 시도 즉시조치: 접근 로그 확보; 현장 인원 분리 60초조치: 접근 중단 고지; 보안 인력 호출; 설비 구역 봉쇄 5분조치: 신원 확인; 촬영물 삭제/보전 절차 확인; 기록 보존 상향조건: 데이터 반출 의심; 다수 공범"
   },
   {
     "id": "electrical-001",
-    "title": "스파크/아크 의심 감지 대응",
+    "title": "스파크/아크 발생 대응",
     "hazard_type": "electrical",
     "severity": "high",
-    "tags": ["전기", "스파크", "아크", "감전"],
-    "situation": "분전반 또는 케이블 구간에서 스파크/아크 의심 광원이 감지되는 상황",
-    "immediate_actions": ["메인 차단기 즉시 OFF", "접근 금지", "감전 위험 구역 통제"],
-    "secondary_actions": ["절연 보호구 착용 후 점검", "케이블 손상 여부 확인"],
-    "reporting": ["전기 담당자", "현장 책임자"],
-    "ppe": ["절연 장갑", "절연 신발", "보안경"],
-    "prohibitions": ["임시 배선 사용 금지"],
-    "restart_conditions": ["전기 담당 승인", "절연/누설 점검 완료"],
-    "version": "1.0",
+    "tags": [
+      "스파크",
+      "아크",
+      "감전",
+      "차단"
+    ],
+    "situation": "전기 설비에서 스파크 또는 아크 방전이 감지됨",
+    "trigger_signals": [
+      "강한 섬광",
+      "타는 냄새",
+      "차단기 반복 트립"
+    ],
+    "first_60_sec": [
+      "메인 전원 차단",
+      "접근 통제",
+      "인원 이격"
+    ],
+    "first_5_min": [
+      "절연 상태 확인",
+      "손상 구간 표식",
+      "점검자 지정"
+    ],
+    "immediate_actions": [
+      "절연 보호구 착용",
+      "비상 조명 확보"
+    ],
+    "secondary_actions": [
+      "원인 분석",
+      "부하 재배치"
+    ],
+    "reporting": [
+      "전기 담당자",
+      "현장 책임자"
+    ],
+    "ppe": [
+      "절연 장갑",
+      "절연 신발",
+      "보안경"
+    ],
+    "prohibitions": [
+      "차단 해제 전 점검 생략 금지"
+    ],
+    "escalation_criteria": [
+      "반복 아크",
+      "연기 동반",
+      "감전 사고"
+    ],
+    "restart_conditions": [
+      "절연 저항 기준 충족",
+      "담당자 승인"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 전기 설비에서 스파크 또는 아크 방전이 감지됨 즉시조치: 절연 보호구 착용; 비상 조명 확보 60초조치: 메인 전원 차단; 접근 통제; 인원 이격 5분조치: 절연 상태 확인; 손상 구간 표식; 점검자 지정 상향조건: 반복 아크; 연기 동반; 감전 사고"
   },
   {
     "id": "electrical-002",
     "title": "누전 의심 구역 대응",
     "hazard_type": "electrical",
     "severity": "high",
-    "tags": ["누전", "감전", "접지", "차단"],
-    "situation": "금속 구조물 또는 습윤 환경에서 누전 의심 징후가 있는 상황",
-    "immediate_actions": ["해당 구역 접근 금지", "전원 차단", "절연 매트 설치"],
-    "secondary_actions": ["접지 상태 점검", "누전차단기 동작 확인"],
-    "reporting": ["전기 담당자", "안전 관리자"],
-    "ppe": ["절연 장갑", "절연 장화"],
-    "prohibitions": ["습윤 상태 전기작업 금지"],
-    "restart_conditions": ["누전 원인 제거", "점검 보고 완료"],
-    "version": "1.0",
+    "tags": [
+      "누전",
+      "감전",
+      "습윤",
+      "접지"
+    ],
+    "situation": "습윤 환경에서 누전 의심 징후 감지",
+    "trigger_signals": [
+      "금속 표면 전위 의심",
+      "누전차단기 빈번 동작",
+      "작업자 감전 호소"
+    ],
+    "first_60_sec": [
+      "전원 즉시 차단",
+      "습윤 구역 접근 금지",
+      "절연 매트 설치"
+    ],
+    "first_5_min": [
+      "접지 상태 점검",
+      "배선 손상 확인",
+      "누전차단기 시험"
+    ],
+    "immediate_actions": [
+      "위험구역 표시",
+      "대체 동선 안내"
+    ],
+    "secondary_actions": [
+      "배선 교체",
+      "방수 보강"
+    ],
+    "reporting": [
+      "전기 담당자",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "절연 장갑",
+      "절연 장화"
+    ],
+    "prohibitions": [
+      "습윤 상태 전기작업 금지"
+    ],
+    "escalation_criteria": [
+      "감전자 발생",
+      "차단 후 재누전"
+    ],
+    "restart_conditions": [
+      "누전 원인 제거",
+      "시험 통과",
+      "승인 완료"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 습윤 환경에서 누전 의심 징후 감지 즉시조치: 위험구역 표시; 대체 동선 안내 60초조치: 전원 즉시 차단; 습윤 구역 접근 금지; 절연 매트 설치 5분조치: 접지 상태 점검; 배선 손상 확인; 누전차단기 시험 상향조건: 감전자 발생; 차단 후 재누전"
   },
   {
     "id": "electrical-003",
     "title": "임시 배선 과부하 대응",
     "hazard_type": "electrical",
     "severity": "medium",
-    "tags": ["임시배선", "과부하", "발열", "점검"],
-    "situation": "임시 배선의 발열/변색/탄내가 감지되는 상황",
-    "immediate_actions": ["해당 라인 차단", "연결 장비 분리", "발열 구간 표식"],
-    "secondary_actions": ["부하 재배분", "정식 배선 교체 계획"],
-    "reporting": ["설비 담당자", "전기 담당자"],
-    "ppe": ["절연 장갑"],
-    "prohibitions": ["멀티탭 연쇄 연결 금지"],
-    "restart_conditions": ["정격 부하 준수", "배선 교체 완료"],
-    "version": "1.0",
+    "tags": [
+      "임시배선",
+      "과부하",
+      "발열",
+      "정격"
+    ],
+    "situation": "임시 배선에서 발열/변색/탄내가 관찰됨",
+    "trigger_signals": [
+      "케이블 변색",
+      "커넥터 발열",
+      "탄내"
+    ],
+    "first_60_sec": [
+      "해당 라인 차단",
+      "부하 분리",
+      "발열 지점 이격"
+    ],
+    "first_5_min": [
+      "부하 계측",
+      "배선 규격 확인",
+      "대체 회로 전환"
+    ],
+    "immediate_actions": [
+      "멀티탭 연쇄 해체",
+      "임시배선 태깅"
+    ],
+    "secondary_actions": [
+      "정식 배선 공사",
+      "부하 계획 재수립"
+    ],
+    "reporting": [
+      "설비 담당",
+      "전기 담당"
+    ],
+    "ppe": [
+      "절연 장갑"
+    ],
+    "prohibitions": [
+      "정격 초과 운전 금지"
+    ],
+    "escalation_criteria": [
+      "차단 후 재발열",
+      "연기 발생"
+    ],
+    "restart_conditions": [
+      "정격 부하 검증",
+      "배선 교체 완료"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 임시 배선에서 발열/변색/탄내가 관찰됨 즉시조치: 멀티탭 연쇄 해체; 임시배선 태깅 60초조치: 해당 라인 차단; 부하 분리; 발열 지점 이격 5분조치: 부하 계측; 배선 규격 확인; 대체 회로 전환 상향조건: 차단 후 재발열; 연기 발생"
   },
   {
     "id": "electrical-004",
     "title": "전기 패널 무단 개방 대응",
     "hazard_type": "electrical",
     "severity": "medium",
-    "tags": ["전기패널", "무단개방", "잠금", "LOTO"],
-    "situation": "승인되지 않은 인력이 전기 패널을 개방한 상황",
-    "immediate_actions": ["즉시 접근 통제", "패널 재잠금", "작업자 이격"],
-    "secondary_actions": ["LOTO 절차 확인", "접근 권한 재점검"],
-    "reporting": ["전기 담당자", "현장 책임자"],
-    "ppe": ["절연 장갑", "보안경"],
-    "prohibitions": ["권한 없는 패널 조작 금지"],
-    "restart_conditions": ["권한 검증", "LOTO 절차 정상화"],
-    "version": "1.0",
+    "tags": [
+      "전기패널",
+      "무단개방",
+      "LOTO",
+      "권한"
+    ],
+    "situation": "권한 미확인 인력이 전기 패널을 개방한 상황",
+    "trigger_signals": [
+      "패널 개방 흔적",
+      "잠금장치 해제",
+      "작업허가서 부재"
+    ],
+    "first_60_sec": [
+      "개방 중지 지시",
+      "패널 재잠금",
+      "접근 통제"
+    ],
+    "first_5_min": [
+      "권한 확인",
+      "LOTO 상태 점검",
+      "작업허가 대조"
+    ],
+    "immediate_actions": [
+      "접근 로그 기록",
+      "현장 책임자 호출"
+    ],
+    "secondary_actions": [
+      "권한 체계 교육",
+      "잠금 장치 교체"
+    ],
+    "reporting": [
+      "전기 담당",
+      "현장 책임자"
+    ],
+    "ppe": [
+      "절연 장갑",
+      "보안경"
+    ],
+    "prohibitions": [
+      "무허가 패널 조작 금지"
+    ],
+    "escalation_criteria": [
+      "반복 위반",
+      "통전 상태 접촉 시도"
+    ],
+    "restart_conditions": [
+      "권한 검증",
+      "LOTO 정상화",
+      "승인 완료"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 권한 미확인 인력이 전기 패널을 개방한 상황 즉시조치: 접근 로그 기록; 현장 책임자 호출 60초조치: 개방 중지 지시; 패널 재잠금; 접근 통제 5분조치: 권한 확인; LOTO 상태 점검; 작업허가 대조 상향조건: 반복 위반; 통전 상태 접촉 시도"
   },
   {
     "id": "electrical-005",
-    "title": "고압 설비 인근 작업 통제",
+    "title": "고압구역 비인가 작업 대응",
     "hazard_type": "electrical",
-    "severity": "high",
-    "tags": ["고압", "접근통제", "감전", "격리"],
-    "situation": "고압 설비 인근에서 비인가 작업이 진행되는 상황",
-    "immediate_actions": ["작업 중지", "안전거리 확보", "출입 통제"],
-    "secondary_actions": ["감시자 배치", "작업 허가서 재확인"],
-    "reporting": ["전기 담당자", "안전 관리자"],
-    "ppe": ["절연 보호구", "안전모"],
-    "prohibitions": ["허가 없는 고압구역 진입 금지"],
-    "restart_conditions": ["허가서 승인", "감시자 배치 완료"],
-    "version": "1.0",
+    "severity": "critical",
+    "tags": [
+      "고압",
+      "비인가",
+      "감전",
+      "허가"
+    ],
+    "situation": "고압 설비 인근에서 허가 없는 작업 진행",
+    "trigger_signals": [
+      "허가서 미제출",
+      "안전거리 미준수",
+      "감시자 부재"
+    ],
+    "first_60_sec": [
+      "작업 중지",
+      "안전거리 확보",
+      "출입문 봉쇄"
+    ],
+    "first_5_min": [
+      "허가서 확인",
+      "감시자 배치",
+      "위험평가 재실시"
+    ],
+    "immediate_actions": [
+      "고압 경고표지 보강"
+    ],
+    "secondary_actions": [
+      "허가 프로세스 개선",
+      "재발방지 교육"
+    ],
+    "reporting": [
+      "전기 담당",
+      "안전 관리자",
+      "현장 책임자"
+    ],
+    "ppe": [
+      "절연 보호구",
+      "안전모"
+    ],
+    "prohibitions": [
+      "허가 없는 고압작업 금지"
+    ],
+    "escalation_criteria": [
+      "접촉 사고",
+      "아크 발생"
+    ],
+    "restart_conditions": [
+      "허가 승인",
+      "감시체계 구축",
+      "점검 완료"
+    ],
+    "version": "1.1",
     "updated_at": "2026-02-26",
-    "source": "SentinelHybrid Safety Manual"
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 고압 설비 인근에서 허가 없는 작업 진행 즉시조치: 고압 경고표지 보강 60초조치: 작업 중지; 안전거리 확보; 출입문 봉쇄 5분조치: 허가서 확인; 감시자 배치; 위험평가 재실시 상향조건: 접촉 사고; 아크 발생"
+  },
+  {
+    "id": "electrical-006",
+    "title": "침수 구역 전기설비 대응",
+    "hazard_type": "electrical",
+    "severity": "critical",
+    "tags": [
+      "침수",
+      "전기설비",
+      "감전",
+      "차단"
+    ],
+    "situation": "침수된 구역에서 전기 설비가 노출된 상황",
+    "trigger_signals": [
+      "바닥 수위 상승",
+      "설비 하단 침수",
+      "누전 경보"
+    ],
+    "first_60_sec": [
+      "원격 차단 시도",
+      "침수 구역 접근 금지",
+      "인원 대피"
+    ],
+    "first_5_min": [
+      "차단 확인",
+      "배수 계획 수립",
+      "절연 장비 준비"
+    ],
+    "immediate_actions": [
+      "감전 위험 표지 설치"
+    ],
+    "secondary_actions": [
+      "배수 후 절연 점검",
+      "설비 건조 절차 시행"
+    ],
+    "reporting": [
+      "전기 담당",
+      "시설 담당",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "절연 장화",
+      "절연 장갑"
+    ],
+    "prohibitions": [
+      "침수 상태 통전 점검 금지"
+    ],
+    "escalation_criteria": [
+      "수위 증가",
+      "감전자 발생"
+    ],
+    "restart_conditions": [
+      "완전 배수",
+      "절연 시험 통과",
+      "승인 완료"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 침수된 구역에서 전기 설비가 노출된 상황 즉시조치: 감전 위험 표지 설치 60초조치: 원격 차단 시도; 침수 구역 접근 금지; 인원 대피 5분조치: 차단 확인; 배수 계획 수립; 절연 장비 준비 상향조건: 수위 증가; 감전자 발생"
+  },
+  {
+    "id": "general-001",
+    "title": "공통 비상경보 발령 절차",
+    "hazard_type": "general",
+    "severity": "high",
+    "tags": [
+      "공통절차",
+      "비상경보",
+      "대피",
+      "보고"
+    ],
+    "situation": "위험 유형 미확정 상태에서 즉시 통제가 필요한 상황",
+    "trigger_signals": [
+      "위험 징후 다수 감지",
+      "현장 혼란",
+      "유형 미확정"
+    ],
+    "first_60_sec": [
+      "비상경보 발령",
+      "작업 즉시 중단",
+      "현장 책임자 호출"
+    ],
+    "first_5_min": [
+      "인원 점검",
+      "통제선 설정",
+      "초기 위험분류"
+    ],
+    "immediate_actions": [
+      "대피동선 확보",
+      "응급키트 준비"
+    ],
+    "secondary_actions": [
+      "상황 기록",
+      "재발 방지 과제 등록"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "상황별 기본 보호구"
+    ],
+    "prohibitions": [
+      "위험 확인 전 작업 재개 금지"
+    ],
+    "escalation_criteria": [
+      "피해 확산",
+      "인명 위험 증가"
+    ],
+    "restart_conditions": [
+      "위험 원인 제거",
+      "승인 완료"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 위험 유형 미확정 상태에서 즉시 통제가 필요한 상황 즉시조치: 대피동선 확보; 응급키트 준비 60초조치: 비상경보 발령; 작업 즉시 중단; 현장 책임자 호출 5분조치: 인원 점검; 통제선 설정; 초기 위험분류 상향조건: 피해 확산; 인명 위험 증가"
+  },
+  {
+    "id": "general-002",
+    "title": "부상자 발견 시 응급대응",
+    "hazard_type": "general",
+    "severity": "high",
+    "tags": [
+      "부상자",
+      "응급처치",
+      "구조",
+      "보고"
+    ],
+    "situation": "현장에서 의식 저하/출혈 등 부상자 발견",
+    "trigger_signals": [
+      "의식 저하",
+      "출혈",
+      "골절 의심"
+    ],
+    "first_60_sec": [
+      "2차 사고 위험 제거",
+      "응급요원 호출",
+      "119 신고 판단"
+    ],
+    "first_5_min": [
+      "기본 응급처치",
+      "구조 동선 확보",
+      "부상자 상태 기록"
+    ],
+    "immediate_actions": [
+      "주변 작업 중지",
+      "군중 통제"
+    ],
+    "secondary_actions": [
+      "사고 원인 보존",
+      "사후 보고서 작성"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자",
+      "필요 시 119"
+    ],
+    "ppe": [
+      "응급처치 장갑",
+      "보안경"
+    ],
+    "prohibitions": [
+      "비전문가 임의 이동 금지"
+    ],
+    "escalation_criteria": [
+      "의식 소실",
+      "호흡 이상",
+      "다발성 부상"
+    ],
+    "restart_conditions": [
+      "구조 완료",
+      "위험요인 제거",
+      "현장 승인"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 현장에서 의식 저하/출혈 등 부상자 발견 즉시조치: 주변 작업 중지; 군중 통제 60초조치: 2차 사고 위험 제거; 응급요원 호출; 119 신고 판단 5분조치: 기본 응급처치; 구조 동선 확보; 부상자 상태 기록 상향조건: 의식 소실; 호흡 이상; 다발성 부상"
+  },
+  {
+    "id": "general-003",
+    "title": "통신 장애 시 수동 비상전파",
+    "hazard_type": "general",
+    "severity": "medium",
+    "tags": [
+      "통신장애",
+      "수동전파",
+      "비상연락"
+    ],
+    "situation": "무전/네트워크 장애로 자동 전파가 어려운 상황",
+    "trigger_signals": [
+      "무전 불통",
+      "네트워크 단절",
+      "알림 미수신"
+    ],
+    "first_60_sec": [
+      "수동 호출 체계 전환",
+      "연락 담당 지정",
+      "핵심 구역 우선 전파"
+    ],
+    "first_5_min": [
+      "연락망 점검",
+      "대체 채널 확보",
+      "복구팀 호출"
+    ],
+    "immediate_actions": [
+      "종이 체크리스트 사용"
+    ],
+    "secondary_actions": [
+      "장애 원인 분석",
+      "백업 채널 훈련"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "IT/설비 담당"
+    ],
+    "ppe": [
+      "해당 없음"
+    ],
+    "prohibitions": [
+      "미전파 상태 작업 지속 금지"
+    ],
+    "escalation_criteria": [
+      "핵심 구역 미전파",
+      "장애 장기화"
+    ],
+    "restart_conditions": [
+      "통신 복구",
+      "전파 확인 완료"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 무전/네트워크 장애로 자동 전파가 어려운 상황 즉시조치: 종이 체크리스트 사용 60초조치: 수동 호출 체계 전환; 연락 담당 지정; 핵심 구역 우선 전파 5분조치: 연락망 점검; 대체 채널 확보; 복구팀 호출 상향조건: 핵심 구역 미전파; 장애 장기화"
+  },
+  {
+    "id": "general-004",
+    "title": "폭우·강풍 외부작업 중지 기준",
+    "hazard_type": "general",
+    "severity": "high",
+    "tags": [
+      "폭우",
+      "강풍",
+      "외부작업",
+      "중지"
+    ],
+    "situation": "기상 악화로 외부 작업 안전 확보가 어려운 상황",
+    "trigger_signals": [
+      "강풍 경보",
+      "시야 저하",
+      "구조물 흔들림"
+    ],
+    "first_60_sec": [
+      "외부작업 즉시 중지",
+      "고소 작업자 하강",
+      "자재 고정"
+    ],
+    "first_5_min": [
+      "인원 실내 대피",
+      "낙하물 위험 통제",
+      "기상 정보 갱신"
+    ],
+    "immediate_actions": [
+      "전기 장비 방수 조치"
+    ],
+    "secondary_actions": [
+      "재개 기준 재공지",
+      "피해 점검"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자"
+    ],
+    "ppe": [
+      "우의",
+      "미끄럼 방지화"
+    ],
+    "prohibitions": [
+      "기상 경보 중 고소작업 금지"
+    ],
+    "escalation_criteria": [
+      "구조물 파손",
+      "낙하물 사고"
+    ],
+    "restart_conditions": [
+      "기상 안정",
+      "현장 점검 완료"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 기상 악화로 외부 작업 안전 확보가 어려운 상황 즉시조치: 전기 장비 방수 조치 60초조치: 외부작업 즉시 중지; 고소 작업자 하강; 자재 고정 5분조치: 인원 실내 대피; 낙하물 위험 통제; 기상 정보 갱신 상향조건: 구조물 파손; 낙하물 사고"
+  },
+  {
+    "id": "general-005",
+    "title": "밀폐공간 산소농도 이상 대응",
+    "hazard_type": "general",
+    "severity": "critical",
+    "tags": [
+      "밀폐공간",
+      "산소농도",
+      "질식",
+      "가스"
+    ],
+    "situation": "밀폐공간 작업 중 산소농도/유해가스 경보 발생",
+    "trigger_signals": [
+      "가스검지기 경보",
+      "작업자 어지럼",
+      "호흡곤란"
+    ],
+    "first_60_sec": [
+      "즉시 퇴출",
+      "출입 전면 통제",
+      "환기 시작"
+    ],
+    "first_5_min": [
+      "농도 재측정",
+      "구조대 대기",
+      "구조 절차 준비"
+    ],
+    "immediate_actions": [
+      "감시자 배치",
+      "구조 장비 점검"
+    ],
+    "secondary_actions": [
+      "원인 가스원 차단",
+      "작업계획 재수립"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "안전 관리자",
+      "필요 시 119"
+    ],
+    "ppe": [
+      "송기마스크",
+      "가스측정기"
+    ],
+    "prohibitions": [
+      "농도 확인 전 재진입 금지"
+    ],
+    "escalation_criteria": [
+      "의식 소실",
+      "농도 회복 실패"
+    ],
+    "restart_conditions": [
+      "농도 기준 정상",
+      "허가서 재승인"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 밀폐공간 작업 중 산소농도/유해가스 경보 발생 즉시조치: 감시자 배치; 구조 장비 점검 60초조치: 즉시 퇴출; 출입 전면 통제; 환기 시작 5분조치: 농도 재측정; 구조대 대기; 구조 절차 준비 상향조건: 의식 소실; 농도 회복 실패"
+  },
+  {
+    "id": "general-006",
+    "title": "중장비 근접작업 공통 통제",
+    "hazard_type": "general",
+    "severity": "high",
+    "tags": [
+      "중장비",
+      "근접작업",
+      "접촉사고",
+      "신호수"
+    ],
+    "situation": "중장비와 인력이 혼재된 구역에서 충돌 위험 증가",
+    "trigger_signals": [
+      "사각지대 인원 체류",
+      "신호수 부재",
+      "경보음 미작동"
+    ],
+    "first_60_sec": [
+      "장비 정지",
+      "인원 이격",
+      "신호수 배치"
+    ],
+    "first_5_min": [
+      "작업 반경 재설정",
+      "통행 동선 분리",
+      "경보장치 점검"
+    ],
+    "immediate_actions": [
+      "고가시성 표지 설치",
+      "속도 제한 적용"
+    ],
+    "secondary_actions": [
+      "작업 순서 재조정",
+      "근접작업 교육"
+    ],
+    "reporting": [
+      "현장 책임자",
+      "장비 담당자"
+    ],
+    "ppe": [
+      "반사 조끼",
+      "안전모",
+      "안전화"
+    ],
+    "prohibitions": [
+      "신호수 없는 장비 이동 금지"
+    ],
+    "escalation_criteria": [
+      "근접 충돌 직전 상황 반복",
+      "경보장치 불량 지속"
+    ],
+    "restart_conditions": [
+      "동선 분리 완료",
+      "신호체계 확인",
+      "승인 완료"
+    ],
+    "version": "1.1",
+    "updated_at": "2026-02-26",
+    "source": "SentinelHybrid Safety Manual",
+    "content": "상황: 중장비와 인력이 혼재된 구역에서 충돌 위험 증가 즉시조치: 고가시성 표지 설치; 속도 제한 적용 60초조치: 장비 정지; 인원 이격; 신호수 배치 5분조치: 작업 반경 재설정; 통행 동선 분리; 경보장치 점검 상향조건: 근접 충돌 직전 상황 반복; 경보장치 불량 지속"
   }
 ]
