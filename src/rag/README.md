@@ -36,5 +36,11 @@ RAG 데이터/유틸리티 영역입니다.
 
 ## 인제스트 규칙
 - 문서는 Chroma에 `index_text()` 결과(구조화 필드 포함)를 임베딩한다.
+- 기본값으로 문서는 청킹되어 인덱싱된다(문서당 다중 청크).
+  - `RAG_CHUNK_ENABLED=true`
+  - `RAG_CHUNK_SIZE_CHARS=750`
+  - `RAG_CHUNK_OVERLAP_CHARS=120`
+  - `RAG_CHUNK_QUERY_MULTIPLIER=3`
 - 검색 결과 반환 시 `metadata.content`가 있으면 해당 값을 우선 사용한다.
+- 청크 검색 결과는 `parent_id` 기준으로 중복 제거 후 최종 `top_k`를 반환한다.
 - `tags`, `hazard_type`, `severity`, `version`은 metadata로 함께 저장한다.

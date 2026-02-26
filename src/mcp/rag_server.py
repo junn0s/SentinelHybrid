@@ -17,6 +17,10 @@ RAG_CHROMA_PATH = os.getenv("RAG_CHROMA_PATH", "data/chroma")
 RAG_CHROMA_COLLECTION = os.getenv("RAG_CHROMA_COLLECTION", "sentinelhybrid_manuals_e5_small")
 RAG_EMBEDDING_MODEL = os.getenv("RAG_EMBEDDING_MODEL", "intfloat/multilingual-e5-small")
 RAG_EMBEDDING_DEVICE = os.getenv("RAG_EMBEDDING_DEVICE", "cpu")
+RAG_CHUNK_ENABLED = os.getenv("RAG_CHUNK_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+RAG_CHUNK_SIZE_CHARS = max(200, int(os.getenv("RAG_CHUNK_SIZE_CHARS", "750")))
+RAG_CHUNK_OVERLAP_CHARS = max(0, int(os.getenv("RAG_CHUNK_OVERLAP_CHARS", "120")))
+RAG_CHUNK_QUERY_MULTIPLIER = max(1, int(os.getenv("RAG_CHUNK_QUERY_MULTIPLIER", "3")))
 
 
 def _is_e5_model() -> bool:
@@ -60,6 +64,71 @@ def _build_embedding_function():
         return None
 
 
+def _chunk_text(text: str) -> list[str]:
+    normalized_lines = [line.strip() for line in text.splitlines() if line.strip()]
+    normalized = "\n".join(normalized_lines)
+    if not normalized:
+        return []
+    if not RAG_CHUNK_ENABLED or len(normalized) <= RAG_CHUNK_SIZE_CHARS:
+        return [normalized]
+
+    chunks: list[str] = []
+    current = ""
+    for line in normalized_lines:
+        if not current:
+            current = line
+            continue
+        candidate = f"{current}\n{line}"
+        if len(candidate) <= RAG_CHUNK_SIZE_CHARS:
+            current = candidate
+            continue
+
+        chunks.append(current)
+        if RAG_CHUNK_OVERLAP_CHARS > 0 and len(current) > RAG_CHUNK_OVERLAP_CHARS:
+            tail = current[-RAG_CHUNK_OVERLAP_CHARS :]
+            if "\n" in tail:
+                tail = tail.split("\n", 1)[1]
+            current = f"{tail}\n{line}".strip()
+        else:
+            current = line
+
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def _build_index_records() -> tuple[list[str], list[str], list[dict]]:
+    ids: list[str] = []
+    documents: list[str] = []
+    metadatas: list[dict] = []
+
+    for manual in MANUALS:
+        chunks = _chunk_text(manual.index_text())
+        if not chunks:
+            chunks = [manual.index_text()]
+        total = len(chunks)
+
+        for idx, chunk in enumerate(chunks, start=1):
+            record_id = manual.id if not RAG_CHUNK_ENABLED else f"{manual.id}::chunk-{idx:02d}"
+            ids.append(record_id)
+            documents.append(_prepare_document_text(chunk))
+            metadatas.append(
+                {
+                    "title": manual.title,
+                    "tags": ",".join(manual.tags),
+                    "hazard_type": manual.hazard_type,
+                    "severity": manual.severity,
+                    "version": manual.version,
+                    "content": manual.content,
+                    "parent_id": manual.id,
+                    "chunk_index": idx,
+                    "chunk_total": total,
+                }
+            )
+
+    return ids, documents, metadatas
+
+
 def _init_chroma() -> None:
     global CHROMA_COLLECTION
     try:
@@ -74,22 +143,18 @@ def _init_chroma() -> None:
         else:
             collection = client.get_or_create_collection(name=RAG_CHROMA_COLLECTION)
 
-        # Keep manual entries synchronized.
-        collection.upsert(
-            ids=[m.id for m in MANUALS],
-            documents=[_prepare_document_text(m.index_text()) for m in MANUALS],
-            metadatas=[
-                {
-                    "title": m.title,
-                    "tags": ",".join(m.tags),
-                    "hazard_type": m.hazard_type,
-                    "severity": m.severity,
-                    "version": m.version,
-                    "content": m.content,
-                }
-                for m in MANUALS
-            ],
-        )
+        ids, documents, metadatas = _build_index_records()
+
+        # Keep manual entries synchronized and remove stale IDs.
+        try:
+            existing_ids = set(collection.get(include=[])["ids"])
+            stale_ids = list(existing_ids.difference(ids))
+            if stale_ids:
+                collection.delete(ids=stale_ids)
+        except Exception as exc:
+            LOGGER.warning("Could not prune stale RAG records: %s", exc)
+
+        collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
 
         CHROMA_COLLECTION = collection
     except Exception as exc:
@@ -105,26 +170,37 @@ def retrieve_guidelines(query: str, top_k: int = 3) -> dict:
     matches = []
     if CHROMA_COLLECTION is not None:
         try:
-            result = CHROMA_COLLECTION.query(query_texts=[_prepare_query_text(query)], n_results=top_k)
+            n_results = top_k
+            if RAG_CHUNK_ENABLED:
+                n_results = max(top_k * RAG_CHUNK_QUERY_MULTIPLIER, top_k)
+
+            result = CHROMA_COLLECTION.query(query_texts=[_prepare_query_text(query)], n_results=n_results)
             ids = result.get("ids", [[]])[0]
             docs = result.get("documents", [[]])[0]
             metas = result.get("metadatas", [[]])[0]
+            seen_parents: set[str] = set()
             for idx, item_id in enumerate(ids):
                 meta = metas[idx] if idx < len(metas) else {}
                 tags = []
                 if isinstance(meta, dict) and isinstance(meta.get("tags"), str):
                     tags = [t for t in meta["tags"].split(",") if t]
+                parent_id = str(meta.get("parent_id", item_id)) if isinstance(meta, dict) else str(item_id)
+                if parent_id in seen_parents:
+                    continue
+                seen_parents.add(parent_id)
                 content = _cleanup_document_text(str(docs[idx])) if idx < len(docs) else ""
                 if isinstance(meta, dict) and isinstance(meta.get("content"), str) and meta.get("content", "").strip():
                     content = str(meta["content"]).strip()
                 matches.append(
                     {
-                        "id": str(item_id),
+                        "id": parent_id,
                         "title": str(meta.get("title", "RAG Match")) if isinstance(meta, dict) else "RAG Match",
                         "content": content,
                         "tags": tags,
                     }
                 )
+                if len(matches) >= top_k:
+                    break
         except Exception as exc:
             LOGGER.warning("Chroma retrieval failed. Switching to keyword fallback: %s", exc)
             matches = []
