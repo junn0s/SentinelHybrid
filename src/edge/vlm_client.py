@@ -151,7 +151,7 @@ class VLMClient:
             prompt=(
                 "당신은 산업안전 비전 분석기다. 입력 이미지를 보고 JSON 객체 1개만 출력하라(추가 텍스트/설명/코드블록 금지).\n"
                 "label: DANGER 또는 SAFE\n"
-                "risk_score: 0~1 실수 (위험 근거가 불충분하면 SAFE 및 0.49 이하)\n"
+                "risk_score: 0~1 실수 (SAFE 시에는 0.49 이하의 값, DANGER 시에는 0.71 이상의 값)\n"
                 "hazard_type: fire, fall, intrusion, electrical, unknown 중 하나\n"
                 "summary: 한국어 1~2문장으로 관찰된 상황을 구체적으로 서술\n"
                 "evidence: 관찰 근거 최대 3개 문자열 배열\n"
